@@ -1,32 +1,33 @@
 export type CourseType = 'tezkor' | 'avto_maktab';
-export type PaymentType = 'naqd' | 'karta';
-export type DocumentStatus = '+' | '-';
-export type ResultStatus = '✓' | '✗';
+export type PaymentMethod = 'naqd' | 'karta' | 'perechisleniya';
+export type ResultStatus = 'kutilmoqda' | 'topshirdi' | 'yiqildi';
 
 export interface Student {
   id: string;
-  familya: string;
-  ismi: string;
-  telefon: string;
-  kurs_narxi: number;
+  last_name: string;
+  first_name: string;
+  phone: string;
+  total_price: number;
   course_type: CourseType;
   branch_id: string;
   branch_name?: string;
-  tulov_turi: PaymentType;
-  // Tezkor fields
-  tolov?: number;
-  qarzdorlik: number;
-  dakument?: DocumentStatus;
-  operator?: string;
-  natijasi?: ResultStatus;
-  izoh?: string;
-  // Avto maktab fields
-  boshlangich_tulov?: number;
-  tulov_2?: number;
-  tulov_3?: number;
-  // Avto maktab detail
-  guruh?: string;
-  tugatish_sanasi?: string;
-  shartnoma_raqami?: string;
+  payment_method: PaymentMethod;
+  debt: number;
+  has_document: boolean;
+  registered_by?: string;
+  result: ResultStatus;
+  notes?: string;
   created_at: string;
+
+  // Tezkor only
+  amount_paid?: number;
+
+  // Avto maktab only
+  initial_payment?: number;
+  second_payment?: number;
+  third_payment?: number;
+  group_name?: string;
+  completion_date?: string;
+  o83?: boolean;
+  contract_number?: string;
 }

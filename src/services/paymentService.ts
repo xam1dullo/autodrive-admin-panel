@@ -3,10 +3,10 @@ import axiosInstance from '@/api/axiosInstance';
 import { Payment, PaymentSummary } from '@/types/payment';
 
 const demoPayments: Payment[] = [
-  { id: '1', student_id: '1', student_name: 'Karimov Jasur', branch_id: 'minor', branch_name: 'Minor', course_type: 'tezkor', total_price: 2500000, amount_paid: 2500000, remaining_debt: 0, payment_type: 'naqd', date: '2024-03-01', created_at: '2024-03-01' },
-  { id: '2', student_id: '2', student_name: 'Aliyeva Madina', branch_id: 'minor', branch_name: 'Minor', course_type: 'tezkor', total_price: 2500000, amount_paid: 1500000, remaining_debt: 1000000, payment_type: 'karta', date: '2024-03-05', created_at: '2024-03-05' },
-  { id: '3', student_id: '6', student_name: 'Yusupov Akmal', branch_id: 'minor', branch_name: 'Minor', course_type: 'avto_maktab', total_price: 6000000, amount_paid: 5500000, remaining_debt: 500000, payment_type: 'naqd', date: '2024-03-01', created_at: '2024-03-01' },
-  { id: '4', student_id: '7', student_name: 'Mirzo Shahlo', branch_id: 'chorsu', branch_name: 'Chorsu', course_type: 'avto_maktab', total_price: 6000000, amount_paid: 1600000, remaining_debt: 4400000, payment_type: 'karta', date: '2024-03-03', created_at: '2024-03-03' },
+  { id: '1', student_id: '1', student_name: 'Karimov Jasur', branch_id: 'minor', branch_name: 'Minor', course_type: 'tezkor', total_price: 2500000, amount_paid: 2500000, remaining_debt: 0, payment_method: 'naqd', date: '2024-03-01', created_at: '2024-03-01' },
+  { id: '2', student_id: '2', student_name: 'Aliyeva Madina', branch_id: 'minor', branch_name: 'Minor', course_type: 'tezkor', total_price: 2500000, amount_paid: 1500000, remaining_debt: 1000000, payment_method: 'karta', date: '2024-03-05', created_at: '2024-03-05' },
+  { id: '3', student_id: '6', student_name: 'Yusupov Akmal', branch_id: 'minor', branch_name: 'Minor', course_type: 'avto_maktab', total_price: 6000000, amount_paid: 5500000, remaining_debt: 500000, payment_method: 'naqd', date: '2024-03-01', created_at: '2024-03-01' },
+  { id: '4', student_id: '7', student_name: 'Mirzo Shahlo', branch_id: 'chorsu', branch_name: 'Chorsu', course_type: 'avto_maktab', total_price: 6000000, amount_paid: 1600000, remaining_debt: 4400000, payment_method: 'karta', date: '2024-03-03', created_at: '2024-03-03' },
 ];
 
 const demoSummary: PaymentSummary = { total_collected: 11100000, total_debt: 5900000, monthly_income: 11100000 };

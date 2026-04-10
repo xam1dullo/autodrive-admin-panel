@@ -1,4 +1,4 @@
-import { CourseType, PaymentType } from './student';
+import { CourseType, PaymentMethod } from './student';
 
 export interface Payment {
   id: string;
@@ -10,7 +10,7 @@ export interface Payment {
   total_price: number;
   amount_paid: number;
   remaining_debt: number;
-  payment_type: PaymentType;
+  payment_method: PaymentMethod;
   date: string;
   created_at: string;
 }

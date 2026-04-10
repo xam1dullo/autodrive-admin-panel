@@ -91,7 +91,7 @@ const PaymentsPage = () => {
                           {p.remaining_debt > 0 ? new Intl.NumberFormat('uz-UZ').format(p.remaining_debt) : '—'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center text-xs">{p.payment_type === 'naqd' ? 'Naqd' : 'Karta'}</td>
+                      <td className="px-4 py-3 text-center text-xs">{p.payment_method === 'naqd' ? 'Naqd' : 'Karta'}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.date}</td>
                     </tr>
                   ))}

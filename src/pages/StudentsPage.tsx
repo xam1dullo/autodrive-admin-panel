@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { useStudents, useDeleteStudent } from '@/services/studentService';
+import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from '@/services/studentService';
 import { useBranches } from '@/services/branchService';
 import { CourseType, Student } from '@/types/student';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,10 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import StudentModal from '@/components/ui/StudentModal';
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const formatMoney = (n: number) => new Intl.NumberFormat('uz-UZ').format(n);
+
+const resultIcon = (r: string) => {
+  if (r === 'topshirdi') return <span className="text-success">✓</span>;
+  if (r === 'yiqildi') return <span className="text-destructive">✗</span>;
+  return <span className="text-muted-foreground">—</span>;
+};
 
 const StudentsPage = () => {
   const { isOwner, user } = useAuthStore();
@@ -22,16 +29,20 @@ const StudentsPage = () => {
   );
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editStudent, setEditStudent] = useState<Student | null>(null);
 
   const { data: students, isLoading } = useStudents(courseType, branchId);
   const { data: branches } = useBranches();
+  const createMutation = useCreateStudent();
+  const updateMutation = useUpdateStudent();
   const deleteMutation = useDeleteStudent();
 
   const filtered = students?.filter(
     (s) =>
-      s.familya.toLowerCase().includes(search.toLowerCase()) ||
-      s.ismi.toLowerCase().includes(search.toLowerCase()) ||
-      s.telefon.includes(search)
+      s.last_name.toLowerCase().includes(search.toLowerCase()) ||
+      s.first_name.toLowerCase().includes(search.toLowerCase()) ||
+      s.phone.includes(search)
   );
 
   const handleDelete = () => {
@@ -42,6 +53,25 @@ const StudentsPage = () => {
     });
   };
 
+  const handleModalSubmit = (data: Partial<Student>) => {
+    if (editStudent) {
+      updateMutation.mutate({ ...data, id: editStudent.id } as Student, {
+        onSuccess: () => { toast.success("Talaba yangilandi"); closeModal(); },
+        onError: () => toast.error("Xatolik yuz berdi"),
+      });
+    } else {
+      createMutation.mutate(data, {
+        onSuccess: () => { toast.success("Talaba qo'shildi"); closeModal(); },
+        onError: () => toast.error("Xatolik yuz berdi"),
+      });
+    }
+  };
+
+  const closeModal = () => { setModalOpen(false); setEditStudent(null); };
+
+  const openEdit = (s: Student) => { setEditStudent(s); setModalOpen(true); };
+  const openCreate = () => { setEditStudent(null); setModalOpen(true); };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -49,7 +79,7 @@ const StudentsPage = () => {
           <h1 className="font-heading text-2xl font-bold">Talabalar</h1>
           <p className="text-sm text-muted-foreground">{filtered?.length || 0} ta talaba topildi</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={openCreate}>
           <Plus className="h-4 w-4" /> Talaba qo'shish
         </Button>
       </div>
@@ -113,6 +143,14 @@ const StudentsPage = () => {
                     <th className="px-4 py-3 text-right font-medium text-muted-foreground">3-tulov</th>
                     <th className="px-4 py-3 text-right font-medium text-muted-foreground">Qarzdorlik</th>
                     <th className="px-4 py-3 text-center font-medium text-muted-foreground">Tulov turi</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Guruh</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tugatish</th>
+                    <th className="px-4 py-3 text-center font-medium text-muted-foreground">O83</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Shartnoma</th>
+                    <th className="px-4 py-3 text-center font-medium text-muted-foreground">Dakument</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Operator</th>
+                    <th className="px-4 py-3 text-center font-medium text-muted-foreground">Natijasi</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Izoh</th>
                   </>
                 )}
                 <th className="px-4 py-3 text-center font-medium text-muted-foreground">Amallar</th>
@@ -122,55 +160,66 @@ const StudentsPage = () => {
               {isLoading
                 ? [...Array(5)].map((_, i) => (
                     <tr key={i} className="border-b border-border/50">
-                      <td colSpan={12} className="p-4"><Skeleton className="h-5 w-full" /></td>
+                      <td colSpan={14} className="p-4"><Skeleton className="h-5 w-full" /></td>
                     </tr>
                   ))
                 : filtered?.map((s) => (
                     <tr key={s.id} className="table-row-striped border-b border-border/50">
-                      <td className="px-4 py-3 font-medium">{s.familya}</td>
-                      <td className="px-4 py-3">{s.ismi}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.telefon}</td>
-                      <td className="px-4 py-3 text-right">{formatMoney(s.kurs_narxi)}</td>
+                      <td className="px-4 py-3 font-medium">{s.last_name}</td>
+                      <td className="px-4 py-3">{s.first_name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.phone}</td>
+                      <td className="px-4 py-3 text-right">{formatMoney(s.total_price)}</td>
                       {courseType === 'tezkor' ? (
                         <>
-                          <td className="px-4 py-3 text-right">{formatMoney(s.tolov || 0)}</td>
+                          <td className="px-4 py-3 text-right">{formatMoney(s.amount_paid || 0)}</td>
                           <td className="px-4 py-3 text-right">
-                            <span className={s.qarzdorlik > 0 ? 'text-destructive' : 'text-success'}>
-                              {s.qarzdorlik > 0 ? formatMoney(s.qarzdorlik) : '—'}
+                            <span className={s.debt > 0 ? 'text-destructive' : 'text-success'}>
+                              {s.debt > 0 ? formatMoney(s.debt) : '—'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center text-xs">{s.tulov_turi === 'naqd' ? 'Naqd' : 'Karta'}</td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={s.dakument === '+' ? 'text-success' : 'text-destructive'}>{s.dakument}</span>
+                          <td className="px-4 py-3 text-center text-xs">
+                            {s.payment_method === 'naqd' ? 'Naqd' : s.payment_method === 'karta' ? 'Karta' : 'Transfer'}
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">{s.operator}</td>
                           <td className="px-4 py-3 text-center">
-                            <span className={s.natijasi === '✓' ? 'text-success' : 'text-destructive'}>{s.natijasi}</span>
+                            <span className={s.has_document ? 'text-success' : 'text-destructive'}>{s.has_document ? '+' : '-'}</span>
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground max-w-[120px] truncate">{s.izoh}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{s.registered_by}</td>
+                          <td className="px-4 py-3 text-center">{resultIcon(s.result)}</td>
+                          <td className="px-4 py-3 text-muted-foreground max-w-[120px] truncate">{s.notes}</td>
                         </>
                       ) : (
                         <>
-                          <td className="px-4 py-3 text-right">{formatMoney(s.boshlangich_tulov || 0)}</td>
-                          <td className="px-4 py-3 text-right">{formatMoney(s.tulov_2 || 0)}</td>
-                          <td className="px-4 py-3 text-right">{formatMoney(s.tulov_3 || 0)}</td>
+                          <td className="px-4 py-3 text-right">{formatMoney(s.initial_payment || 0)}</td>
+                          <td className="px-4 py-3 text-right">{formatMoney(s.second_payment || 0)}</td>
+                          <td className="px-4 py-3 text-right">{formatMoney(s.third_payment || 0)}</td>
                           <td className="px-4 py-3 text-right">
-                            <span className={s.qarzdorlik > 0 ? 'text-destructive' : 'text-success'}>
-                              {s.qarzdorlik > 0 ? formatMoney(s.qarzdorlik) : '—'}
+                            <span className={s.debt > 0 ? 'text-destructive' : 'text-success'}>
+                              {s.debt > 0 ? formatMoney(s.debt) : '—'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center text-xs">{s.tulov_turi === 'naqd' ? 'Naqd' : 'Karta'}</td>
+                          <td className="px-4 py-3 text-center text-xs">
+                            {s.payment_method === 'naqd' ? 'Naqd' : s.payment_method === 'karta' ? 'Karta' : 'Transfer'}
+                          </td>
+                          <td className="px-4 py-3">{s.group_name}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{s.completion_date}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={s.o83 ? 'text-success' : 'text-destructive'}>{s.o83 ? '+' : '-'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{s.contract_number}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={s.has_document ? 'text-success' : 'text-destructive'}>{s.has_document ? '+' : '-'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{s.registered_by}</td>
+                          <td className="px-4 py-3 text-center">{resultIcon(s.result)}</td>
+                          <td className="px-4 py-3 text-muted-foreground max-w-[120px] truncate">{s.notes}</td>
                         </>
                       )}
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
-                          <button className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                          <button onClick={() => openEdit(s)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
-                          <button
-                            onClick={() => setDeleteId(s.id)}
-                            className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          >
+                          <button onClick={() => setDeleteId(s.id)} className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
@@ -184,6 +233,15 @@ const StudentsPage = () => {
           )}
         </div>
       </div>
+
+      <StudentModal
+        open={modalOpen}
+        onClose={closeModal}
+        onSubmit={handleModalSubmit}
+        loading={createMutation.isPending || updateMutation.isPending}
+        student={editStudent}
+        courseType={courseType}
+      />
 
       <ConfirmDialog
         open={!!deleteId}
