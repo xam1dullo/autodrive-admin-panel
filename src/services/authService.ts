@@ -30,6 +30,10 @@ const DEMO_USERS: Record<string, { password: string; user: User }> = {
 };
 
 const loginApi = async (creds: LoginCredentials): Promise<AuthResponse> => {
+   const demoUser = DEMO_USERS[creds.email];
+  if (demoUser && demoUser.password === creds.password) {
+    return { token: 'demo-jwt-token-' + Date.now(), user: demoUser.user };
+  }
   const { data } = await axiosInstance.post("/auth/login", creds);
   return data.data;
 };
