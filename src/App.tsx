@@ -14,6 +14,8 @@ import DocumentsPage from "./pages/DocumentsPage";
 import OperatorsPage from "./pages/OperatorsPage";
 import TeachersPage from "./pages/TeachersPage";
 import BranchesPage from "./pages/BranchesPage";
+import GroupsPage from "./pages/GroupsPage";
+import UsersPage from "./pages/UsersPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
@@ -36,11 +38,13 @@ const App = () => (
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="filiallar" element={<OwnerRoute><BranchesPage /></OwnerRoute>} />
+            <Route path="guruhlar" element={<GroupsPage />} />
             <Route path="talabalar" element={<StudentsPage />} />
             <Route path="tolovlar" element={<PaymentsPage />} />
             <Route path="hujjatlar" element={<DocumentsPage />} />
             <Route path="operatorlar" element={<OperatorsPage />} />
             <Route path="oqituvchilar" element={<TeachersPage />} />
+            <Route path="foydalanuvchilar" element={<OwnerRoute><UsersPage /></OwnerRoute>} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

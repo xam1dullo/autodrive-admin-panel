@@ -18,6 +18,7 @@ export interface Student {
   result: ResultStatus;
   notes?: string;
   created_at: string;
+  status?: string;
 
   // Tezkor only
   amount_paid?: number;
@@ -27,6 +28,7 @@ export interface Student {
   second_payment?: number;
   third_payment?: number;
   group_name?: string;
+  group_id?: string;
   completion_date?: string;
   o83?: boolean;
   contract_number?: string;

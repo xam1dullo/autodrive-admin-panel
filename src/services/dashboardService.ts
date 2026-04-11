@@ -41,8 +41,8 @@ export const useDashboardAnalytics = (branchId?: string, courseType?: CourseType
     queryKey: ['dashboard', branchId, courseType],
     queryFn: async () => {
       try {
-        const { data } = await axiosInstance.get('/dashboard/analytics', { params: { branch_id: branchId, course_type: courseType } });
-        return data;
+        const { data: res } = await axiosInstance.get('/dashboard/analytics', { params: { branch_id: branchId, course_type: courseType } });
+        return res?.data || res;
       } catch {
         return demoAnalytics;
       }
