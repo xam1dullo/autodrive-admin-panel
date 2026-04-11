@@ -8,21 +8,17 @@ const demoBranches: Branch[] = [
   { id: 'novza', name: 'Novza', location: 'Novza tumani, Toshkent', manager_name: 'Javohir Sobirov', active_students: 32, created_at: '2024-01-01' },
   { id: 'samarqand', name: 'Samarqand', location: 'Samarqand shahri', manager_name: 'Bekzod Tursunov', active_students: 28, created_at: '2024-01-01' },
 ];
-interface BranchData {
-  data: Data,
-}
-interface Data {
-  data: Branch[];
-  total: number;
-}
 
 export const useBranches = () =>
-  useQuery<BranchData>({
+  useQuery<Branch[]>({
     queryKey: ['branches'],
     queryFn: async () => {
       try {
-        const { data } = await axiosInstance.get('/branches');
-        return data;
+        const { data: res } = await axiosInstance.get('/branches');
+        const arr = res?.data?.data || res?.data;
+        if (Array.isArray(arr)) return arr;
+        if (Array.isArray(res)) return res;
+        return [];
       } catch {
         return demoBranches;
       }
@@ -34,7 +30,7 @@ export const useCreateBranch = () => {
   return useMutation({
     mutationFn: async (branch: Partial<Branch>) => {
       const { data } = await axiosInstance.post('/branches', branch);
-      return data;
+      return data?.data || data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['branches'] }),
   });

@@ -15,27 +15,23 @@ const demoStudentsAvto: Student[] = [
 
 const allDemoStudents = [...demoStudentsTezkor, ...demoStudentsAvto];
 
-interface StudentData {
-  data: Student[];
-}
-
 export const useStudents = (courseType?: CourseType, branchId?: string) => {
-  return useQuery<StudentData>({
+  return useQuery<Student[]>({
     queryKey: ['students', courseType, branchId],
     queryFn: async () => {
       try {
-        const { data } = await axiosInstance.get('/students', {
+        const { data: res } = await axiosInstance.get('/students', {
           params: { course_type: courseType, branch_id: branchId },
         });
-        // Backend { data: [...] } yoki to'g'ridan array qaytarishi mumkin
-        if (Array.isArray(data)) return { data };
-        if (Array.isArray(data?.data)) return data;
-        return { data: [] };
+        const arr = res?.data;
+        if (Array.isArray(arr)) return arr;
+        if (Array.isArray(res)) return res;
+        return [];
       } catch {
         let filtered = allDemoStudents;
         if (courseType) filtered = filtered.filter((s) => s.course_type === courseType);
         if (branchId) filtered = filtered.filter((s) => s.branch_id === branchId);
-        return { data: filtered }; // ← BU YER TUZATILDI
+        return filtered;
       }
     },
   });
@@ -46,7 +42,7 @@ export const useCreateStudent = () => {
   return useMutation({
     mutationFn: async (student: Partial<Student>) => {
       const { data } = await axiosInstance.post('/students', student);
-      return data;
+      return data?.data || data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
   });
@@ -57,7 +53,7 @@ export const useUpdateStudent = () => {
   return useMutation({
     mutationFn: async ({ id, ...student }: Partial<Student> & { id: string }) => {
       const { data } = await axiosInstance.put(`/students/${id}`, student);
-      return data;
+      return data?.data || data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
   });

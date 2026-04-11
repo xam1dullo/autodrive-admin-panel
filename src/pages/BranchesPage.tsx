@@ -19,7 +19,7 @@ const BranchesPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {isLoading
           ? [...Array(4)].map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)
-          : branches?.data?.data.map((b) => (
+          : (branches || []).map((b) => (
               <div key={b.id} className="glass-card p-5 animate-slide-in">
                 <div className="flex items-start justify-between">
                   <div>

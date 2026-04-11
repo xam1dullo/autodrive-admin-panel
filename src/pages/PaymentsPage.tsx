@@ -5,11 +5,7 @@ import { useStudents } from "@/services/studentService";
 import { useBranches } from "@/services/branchService";
 import { SummaryCard } from "@/components/ui/SummaryCard";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,18 +29,17 @@ const PaymentsPage = () => {
   const { data: summary } = usePaymentSummary(branchId);
   const { data: branches } = useBranches();
 
-  // Talabalar ro'yxati — tezkor va avto_maktab ikkalasidan ham
   const { data: tezkorStudents } = useStudents("tezkor", branchId);
   const { data: avtoStudents } = useStudents("avto_maktab", branchId);
 
   const allStudents = [
-    ...(tezkorStudents?.data ?? []),
-    ...(avtoStudents?.data ?? []),
+    ...(tezkorStudents ?? []),
+    ...(avtoStudents ?? []),
   ];
 
   const createPayment = useCreatePayment();
 
-  const filtered = payments?.data?.filter((p) =>
+  const filtered = (payments || []).filter((p) =>
     p.student_name.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -63,9 +58,7 @@ const PaymentsPage = () => {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold">To'lovlar</h1>
-          <p className="text-sm text-muted-foreground">
-            Barcha to'lovlarni boshqarish
-          </p>
+          <p className="text-sm text-muted-foreground">Barcha to'lovlarni boshqarish</p>
         </div>
         <Button className="gap-2" onClick={() => setModalOpen(true)}>
           <Plus className="h-4 w-4" /> To'lov qo'shish
@@ -74,56 +67,31 @@ const PaymentsPage = () => {
 
       {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <SummaryCard
-          title="Jami yig'ilgan"
-          value={formatMoney(summary?.total_collected || 0)}
-          icon={<DollarSign className="h-5 w-5" />}
-        />
-        <SummaryCard
-          title="Jami qarzdorlik"
-          value={formatMoney(summary?.total_debt || 0)}
-          icon={<AlertTriangle className="h-5 w-5" />}
-        />
+        <SummaryCard title="Jami yig'ilgan" value={formatMoney(summary?.total_collected || 0)} icon={<DollarSign className="h-5 w-5" />} />
+        <SummaryCard title="Jami qarzdorlik" value={formatMoney(summary?.total_debt || 0)} icon={<AlertTriangle className="h-5 w-5" />} />
         {isOwner() && (
-          <SummaryCard
-            title="Bu oylik daromad"
-            value={formatMoney(summary?.monthly_income || 0)}
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
+          <SummaryCard title="Bu oylik daromad" value={formatMoney(summary?.monthly_income || 0)} icon={<TrendingUp className="h-5 w-5" />} />
         )}
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         {isOwner() && (
-          <Select
-            value={branchId || "all"}
-            onValueChange={(v) => setBranchId(v === "all" ? undefined : v)}
-          >
+          <Select value={branchId || "all"} onValueChange={(v) => setBranchId(v === "all" ? undefined : v)}>
             <SelectTrigger className="w-40 bg-secondary border-border">
               <SelectValue placeholder="Filial" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Barchasi</SelectItem>
-              {(Array.isArray(branches?.data?.data)
-                ? branches.data.data
-                : []
-              ).map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  {b.name}
-                </SelectItem>
+              {(branches || []).map((b) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         )}
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Talaba ismi..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-secondary border-border"
-          />
+          <Input placeholder="Talaba ismi..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-secondary border-border" />
         </div>
       </div>
 
@@ -133,81 +101,43 @@ const PaymentsPage = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Talaba
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Filial
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Kurs
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Umumiy narx
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  To'langan
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Qoldiq
-                </th>
-                <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                  Turi
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Sana
-                </th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Talaba</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Filial</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kurs</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Umumiy narx</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">To'langan</th>
+                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Qoldiq</th>
+                <th className="px-4 py-3 text-center font-medium text-muted-foreground">Turi</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Sana</th>
               </tr>
             </thead>
             <tbody>
               {isLoading
                 ? [...Array(4)].map((_, i) => (
                     <tr key={i} className="border-b border-border/50">
-                      <td colSpan={8} className="p-4">
-                        <Skeleton className="h-5" />
-                      </td>
+                      <td colSpan={8} className="p-4"><Skeleton className="h-5" /></td>
                     </tr>
                   ))
                 : filtered?.map((p) => (
-                    <tr
-                      key={p.id}
-                      className="table-row-striped border-b border-border/50"
-                    >
+                    <tr key={p.id} className="table-row-striped border-b border-border/50">
                       <td className="px-4 py-3 font-medium">{p.student_name}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.branch_name}</td>
-                      <td className="px-4 py-3 text-xs">
-                        {p.course_type === "tezkor" ? "Tezkor" : "Avto maktab"}
-                      </td>
+                      <td className="px-4 py-3 text-xs">{p.course_type === "tezkor" ? "Tezkor" : "Avto maktab"}</td>
+                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat("uz-UZ").format(p.total_price)}</td>
+                      <td className="px-4 py-3 text-right text-success">{new Intl.NumberFormat("uz-UZ").format(p.amount_paid)}</td>
                       <td className="px-4 py-3 text-right">
-                        {new Intl.NumberFormat("uz-UZ").format(p.total_price)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-success">
-                        {new Intl.NumberFormat("uz-UZ").format(p.amount_paid)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span
-                          className={
-                            p.remaining_debt > 0 ? "text-destructive" : "text-success"
-                          }
-                        >
-                          {p.remaining_debt > 0
-                            ? new Intl.NumberFormat("uz-UZ").format(p.remaining_debt)
-                            : "—"}
+                        <span className={p.remaining_debt > 0 ? "text-destructive" : "text-success"}>
+                          {p.remaining_debt > 0 ? new Intl.NumberFormat("uz-UZ").format(p.remaining_debt) : "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center text-xs">
-                        {p.payment_method === "naqd" ? "Naqd" : "Karta"}
-                      </td>
+                      <td className="px-4 py-3 text-center text-xs">{p.payment_method === "naqd" ? "Naqd" : "Karta"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.date}</td>
                     </tr>
                   ))}
             </tbody>
           </table>
-
           {filtered?.length === 0 && !isLoading && (
-            <div className="py-12 text-center text-muted-foreground">
-              To'lovlar topilmadi
-            </div>
+            <div className="py-12 text-center text-muted-foreground">To'lovlar topilmadi</div>
           )}
         </div>
       </div>
