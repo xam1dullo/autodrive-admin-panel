@@ -20,7 +20,7 @@ const LoginPage = () => {
       {
         onSuccess: () => {
           toast.success('Tizimga muvaffaqiyatli kirdingiz!');
-          
+
           navigate('/dashboard');
         },
         onError: () => toast.error('Email yoki parol noto\'g\'ri'),
@@ -68,12 +68,6 @@ const LoginPage = () => {
             {login.isPending ? 'Kirilmoqda...' : 'Kirish'}
           </Button>
         </form>
-
-        <div className="mt-6 rounded-lg bg-secondary/50 p-3 text-xs text-muted-foreground">
-          <p className="font-medium text-foreground mb-1">Demo kirish:</p>
-          <p>Owner: owner@autodrive.uz / owner123</p>
-          <p>Manager: manager@autodrive.uz / manager123</p>
-        </div>
       </div>
     </div>
   );
