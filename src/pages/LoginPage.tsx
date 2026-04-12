@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLogin } from '@/services/authService';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Car } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLogin } from "@/services/authService";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Car } from "lucide-react";
+import { toast } from "sonner";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const login = useLogin();
 
@@ -19,12 +19,12 @@ const LoginPage = () => {
       { email, password },
       {
         onSuccess: () => {
-          toast.success('Tizimga muvaffaqiyatli kirdingiz!');
+          toast.success("Tizimga muvaffaqiyatli kirdingiz!");
 
-          navigate('/dashboard');
+          navigate("/dashboard");
         },
-        onError: () => toast.error('Email yoki parol noto\'g\'ri'),
-      }
+        onError: () => toast.error("Email yoki parol noto'g'ri"),
+      },
     );
   };
 
@@ -35,7 +35,9 @@ const LoginPage = () => {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
             <Car className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h1 className="font-heading text-2xl font-bold text-foreground">AutoDrive CRM</h1>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            Auto Maktab CRM
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">Tizimga kirish</p>
         </div>
 
@@ -65,7 +67,7 @@ const LoginPage = () => {
             />
           </div>
           <Button type="submit" className="w-full" disabled={login.isPending}>
-            {login.isPending ? 'Kirilmoqda...' : 'Kirish'}
+            {login.isPending ? "Kirilmoqda..." : "Kirish"}
           </Button>
         </form>
       </div>

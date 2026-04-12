@@ -50,7 +50,7 @@ export const Sidebar = () => {
           <Car className="h-5 w-5 text-primary-foreground" />
         </div>
         {!collapsed && (
-          <span className="font-heading text-lg font-bold text-foreground">AutoDrive</span>
+          <span className="font-heading text-lg font-bold text-foreground">Auto Maktab</span>
         )}
       </div>
 
