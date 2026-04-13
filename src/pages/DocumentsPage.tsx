@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Search } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import PaginationControls from '@/components/ui/PaginationControls';
 
 const demoDocuments = [
   { id: '1', student_name: 'Karimov Jasur', doc_type: 'Haydovchilik guvohnomasi', status: '+', branch: 'Minor', date: '2024-03-01' },
@@ -9,6 +12,13 @@ const demoDocuments = [
 ];
 
 const DocumentsPage = () => {
+  const [search, setSearch] = useState('');
+  const filtered = demoDocuments.filter((d) =>
+    d.student_name.toLowerCase().includes(search.toLowerCase()) ||
+    d.doc_type.toLowerCase().includes(search.toLowerCase())
+  );
+  const { currentPage, totalPages, paginatedItems, setCurrentPage } = usePagination(filtered);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -21,7 +31,7 @@ const DocumentsPage = () => {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Qidirish..." className="pl-9 bg-secondary border-border" />
+        <Input placeholder="Qidirish..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-secondary border-border" />
       </div>
 
       <div className="glass-card overflow-hidden">
@@ -36,7 +46,7 @@ const DocumentsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {demoDocuments.map((d) => (
+            {paginatedItems.map((d) => (
               <tr key={d.id} className="table-row-striped border-b border-border/50">
                 <td className="px-4 py-3 font-medium">{d.student_name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{d.doc_type}</td>
@@ -49,7 +59,12 @@ const DocumentsPage = () => {
             ))}
           </tbody>
         </table>
+        {filtered.length === 0 && (
+          <div className="py-12 text-center text-muted-foreground">Hujjatlar topilmadi</div>
+        )}
       </div>
+
+      <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
     </div>
   );
 };
