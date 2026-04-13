@@ -1,6 +1,8 @@
 import { useUsers } from "@/services/userService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationControls from "@/components/ui/PaginationControls";
 
 const formatDate = (d?: string) => {
   if (!d) return "—";
@@ -9,6 +11,7 @@ const formatDate = (d?: string) => {
 
 const UsersPage = () => {
   const { data: users, isLoading } = useUsers();
+  const { currentPage, totalPages, paginatedItems, setCurrentPage } = usePagination(users || []);
 
   return (
     <div className="space-y-6">
@@ -37,7 +40,7 @@ const UsersPage = () => {
                       <td colSpan={6} className="p-4"><Skeleton className="h-5 w-full" /></td>
                     </tr>
                   ))
-                : (users || []).map((u) => (
+                : paginatedItems.map((u) => (
                     <tr key={u.id} className="table-row-striped border-b border-border/50">
                       <td className="px-4 py-3 font-medium">{u.email}</td>
                       <td className="px-4 py-3 text-muted-foreground">{u.phone || "—"}</td>
@@ -62,6 +65,8 @@ const UsersPage = () => {
           )}
         </div>
       </div>
+
+      <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
     </div>
   );
 };
