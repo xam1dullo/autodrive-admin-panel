@@ -1,5 +1,5 @@
 export type UserRole = 'owner' | 'manager';
-
+export type Specialization = 'THEORY' | 'PRACTICE';
 export interface User {
   id: string;
   name?: string;
@@ -9,6 +9,7 @@ export interface User {
   branch_name?: string;
   phone?: string;
   avatar?: string;
+  specialization?: Specialization;
   is_active?: boolean;
   created_at?: string;
 }

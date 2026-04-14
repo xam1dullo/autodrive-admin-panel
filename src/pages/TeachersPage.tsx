@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTeachers, useCreateTeacher, useUpdateTeacher, useDeleteTeacher, Teacher, Specialization } from '@/services/teacherService';
+import { useTeachers, useCreateTeacher, useUpdateTeacher, useDeleteTeacher, Specialization } from '@/services/teacherService';
 import { useBranches } from '@/services/branchService';
 import { toast } from 'sonner';
+import { User } from '@/types/user';
 
 const specLabels: Record<Specialization, string> = {
   THEORY: 'Nazariy dars',
@@ -21,7 +22,7 @@ const specLabels: Record<Specialization, string> = {
 const TeachersPage = () => {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editItem, setEditItem] = useState<Teacher | null>(null);
+  const [editItem, setEditItem] = useState<User | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ fullName: '', phone: '', branchId: '', specialization: 'THEORY' as Specialization });
 
@@ -32,7 +33,7 @@ const TeachersPage = () => {
   const deleteMut = useDeleteTeacher();
 
   const filtered = (teachers || []).filter((t) =>
-    t.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    t.name?.toLowerCase().includes(search.toLowerCase()) ||
     t.phone?.includes(search)
   );
   const { currentPage, totalPages, paginatedItems, setCurrentPage } = usePagination(filtered);
@@ -43,9 +44,9 @@ const TeachersPage = () => {
     setModalOpen(true);
   };
 
-  const openEdit = (t: Teacher) => {
+  const openEdit = (t: User) => {
     setEditItem(t);
-    setForm({ fullName: t.fullName || '', phone: t.phone || '', branchId: t.branchId || '', specialization: t.specialization || 'THEORY' });
+    setForm({ fullName: t.name || '', phone: t.phone || '', branchId: t.branch_id || '', specialization: t.specialization || 'THEORY' });
     setModalOpen(true);
   };
 
@@ -111,10 +112,10 @@ const TeachersPage = () => {
                 ))
               : paginatedItems.map((t) => (
                 <tr key={t.id} className="table-row-striped border-b border-border/50">
-                  <td className="px-4 py-3 font-medium">{t.fullName}</td>
+                  <td className="px-4 py-3 font-medium">{t.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{t.phone}</td>
                   <td className="px-4 py-3 text-muted-foreground">{specLabels[t.specialization] || t.specialization}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{t.branch_name || getBranchName(t.branchId)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{t.branch_name || getBranchName(t.branch_id)}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${t.is_active !== false ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                       {t.is_active !== false ? 'Faol' : 'Nofaol'}

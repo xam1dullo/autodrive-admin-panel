@@ -1,24 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '@/api/axiosInstance';
+import { User } from '@/types/user';
 
-export interface Operator {
-  id: string;
-  fullName: string;
-  phone: string;
-  role: 'operator';
-  branchId: string;
-  branch_name?: string;
-  is_active?: boolean;
-  created_at?: string;
-}
+
 
 export const useOperators = () =>
-  useQuery<Operator[]>({
+  useQuery<User[]>({
     queryKey: ['operators'],
     queryFn: async () => {
       try {
         const { data: res } = await axiosInstance.get('/users', { params: { role: 'operator' } });
         const arr = res?.data;
+        console.log("Operators response:", res);
         if (Array.isArray(arr)) return arr;
         if (Array.isArray(res)) return res;
         return [];

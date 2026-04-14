@@ -1,22 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '@/api/axiosInstance';
+import { User } from '@/types/user';
 
 export type Specialization = 'THEORY' | 'PRACTICE';
 
-export interface Teacher {
-  id: string;
-  fullName: string;
-  phone: string;
-  role: 'teacher';
-  specialization: Specialization;
-  branchId: string;
-  branch_name?: string;
-  is_active?: boolean;
-  created_at?: string;
-}
 
 export const useTeachers = () =>
-  useQuery<Teacher[]>({
+  useQuery<User[]>({
     queryKey: ['teachers'],
     queryFn: async () => {
       try {
