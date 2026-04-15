@@ -53,7 +53,6 @@ const TeachersPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName.trim() || !form.phone.trim()) return;
-
     if (editItem) {
       updateMut.mutate({ id: editItem.id, ...form }, {
         onSuccess: () => { toast.success("O'qituvchi yangilandi"); setModalOpen(false); },
@@ -78,6 +77,8 @@ const TeachersPage = () => {
   const getBranchName = (branchId: string) =>
     (branches || []).find((b) => b.id === branchId)?.name || branchId || '—';
 
+  const startIndex = (currentPage - 1) * 10;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -95,6 +96,7 @@ const TeachersPage = () => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">#</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ism</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Telefon</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Mutaxassisligi</th>
@@ -107,11 +109,12 @@ const TeachersPage = () => {
             {isLoading
               ? [...Array(3)].map((_, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    <td colSpan={6} className="p-4"><Skeleton className="h-5 w-full" /></td>
+                    <td colSpan={7} className="p-4"><Skeleton className="h-5 w-full" /></td>
                   </tr>
                 ))
-              : paginatedItems.map((t) => (
+              : paginatedItems.map((t, idx) => (
                 <tr key={t.id} className="table-row-striped border-b border-border/50">
+                  <td className="px-4 py-3 text-center text-muted-foreground">{startIndex + idx + 1}</td>
                   <td className="px-4 py-3 font-medium">{t.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{t.phone}</td>
                   <td className="px-4 py-3 text-muted-foreground">{specLabels[t.specialization] || t.specialization}</td>

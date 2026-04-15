@@ -26,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthStore } from "@/store/authStore";
 import { useBranches } from "@/services/branchService";
 import { useGroups } from "@/services/groupService";
+import { User } from "@/types/user";
 
 export interface CreateStudentPayload {
   first_name: string;
@@ -67,6 +68,7 @@ interface StudentModalProps {
   loading?: boolean;
   student?: Student | null;
   courseType: CourseType;
+  operators?: User[];
 }
 
 const StudentModal = ({
@@ -76,13 +78,17 @@ const StudentModal = ({
   loading,
   student,
   courseType,
+  operators = [],
 }: StudentModalProps) => {
   const { isOwner, user } = useAuthStore();
   const { data: branches } = useBranches();
   const { data: groups } = useGroups();
 
   const branchList = branches || [];
-  const groupList = (groups || []).filter((g) => g.course_type === courseType || !g.course_type);
+  // Show all groups regardless of branch for managers (cross-branch assignment)
+  const groupList = (groups || []).filter(
+    (g) => g.course_type === courseType || !g.course_type,
+  );
 
   const defaultForm = (): CreateStudentPayload => ({
     first_name: "",
@@ -99,6 +105,7 @@ const StudentModal = ({
     initial_payment: 0,
     group_id: "",
     status: "active",
+    registered_by: "",
   });
 
   const [form, setForm] = useState<CreateStudentPayload>(defaultForm());
@@ -125,6 +132,7 @@ const StudentModal = ({
           contract_number: student.contract_number,
           notes: student.notes,
           status: student.status || "active",
+          registered_by: student.registered_by || "",
         });
       } else {
         setForm(defaultForm());
@@ -155,8 +163,6 @@ const StudentModal = ({
       return;
     }
 
-    const operatorName = user?.name || user?.email || "Noma'lum";
-
     const payload: CreateStudentPayload = {
       first_name: form.first_name,
       last_name: form.last_name,
@@ -169,7 +175,7 @@ const StudentModal = ({
       has_document: form.has_document,
       notes: form.notes || undefined,
       status: form.status || "active",
-      // registered_by: student ? undefined : operatorName,
+      registered_by: form.registered_by || undefined,
     };
 
     if (courseType === "tezkor") {
@@ -328,7 +334,7 @@ const StudentModal = ({
                     <SelectContent>
                       {groupList.map((g) => (
                         <SelectItem key={g.id} value={g.id}>
-                          {g.name}
+                          {g.name} ({g.branch_name || g.branch_id})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -373,7 +379,7 @@ const StudentModal = ({
                     <SelectContent>
                       {groupList.map((g) => (
                         <SelectItem key={g.id} value={g.id}>
-                          {g.name}
+                          {g.name} ({g.branch_name || g.branch_id})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -410,13 +416,23 @@ const StudentModal = ({
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-2 pt-6">
-              <Checkbox
-                checked={form.has_document || false}
-                onCheckedChange={(v) => set("has_document", !!v)}
-                id="doc"
-              />
-              <Label htmlFor="doc">Hujjat mavjud</Label>
+            <div className="space-y-2">
+              <Label>Operator (registeredBy)</Label>
+              <Select
+                value={form.registered_by || ""}
+                onValueChange={(v) => set("registered_by", v)}
+              >
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue placeholder="Operator tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {operators.map((op) => (
+                    <SelectItem key={op.id} value={op.name || op.id}>
+                      {op.name || op.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Natijasi</Label>
@@ -436,6 +452,15 @@ const StudentModal = ({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={form.has_document || false}
+              onCheckedChange={(v) => set("has_document", !!v)}
+              id="doc"
+            />
+            <Label htmlFor="doc">Hujjat mavjud</Label>
           </div>
 
           <div className="space-y-2">

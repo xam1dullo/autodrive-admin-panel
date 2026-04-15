@@ -2,7 +2,6 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { useGroups, useGroupsOverview, useCreateGroup, useUpdateGroup, useDeleteGroup, useGroupsById } from "@/services/groupService";
 import { useBranches } from "@/services/branchService";
-import { useStudents } from "@/services/studentService";
 import { Group } from "@/types/group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, Eye, X } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationControls from "@/components/ui/PaginationControls";
@@ -41,16 +40,13 @@ const GroupsPage = () => {
   const [expandedBranches, setExpandedBranches] = useState<Record<string, boolean>>({});
   const [detailGroup, setDetailGroup] = useState<Group | null>(null);
 
-  // Form state
   const [formName, setFormName] = useState("");
   const [formBranchId, setFormBranchId] = useState("");
   const [formCourseType, setFormCourseType] = useState<string>("avto_maktab");
 
   const branchList = branches || [];
 
-
-  // Filter students belonging to the selected group
-  const { data: groupData, isLoading: groupsByIdLoading } = useGroupsById({ id: detailGroup?.id ||   "" });
+  const { data: groupData, isLoading: groupsByIdLoading } = useGroupsById({ id: detailGroup?.id || "" });
   const filteredGroups = (groups || []).filter((g) =>
     g.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -103,6 +99,8 @@ const GroupsPage = () => {
 
   const getBranchName = (branchId: string) =>
     branchList.find((b) => b.id === branchId)?.name || branchId;
+
+  const startIndex = (currentPage - 1) * 10;
 
   return (
     <div className="space-y-6">
@@ -166,6 +164,7 @@ const GroupsPage = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
+                <th className="px-4 py-3 text-center font-medium text-muted-foreground">#</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nomi</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Filial</th>
                 <th className="px-4 py-3 text-center font-medium text-muted-foreground">Kurs turi</th>
@@ -179,11 +178,12 @@ const GroupsPage = () => {
               {isLoading
                 ? [...Array(3)].map((_, i) => (
                     <tr key={i} className="border-b border-border/50">
-                      <td colSpan={7} className="p-4"><Skeleton className="h-5 w-full" /></td>
+                      <td colSpan={8} className="p-4"><Skeleton className="h-5 w-full" /></td>
                     </tr>
                   ))
-                : filtered.map((g) => (
+                : filtered.map((g, idx) => (
                     <tr key={g.id} className="table-row-striped border-b border-border/50 cursor-pointer hover:bg-muted/10" onClick={() => setDetailGroup(g)}>
+                      <td className="px-4 py-3 text-center text-muted-foreground">{startIndex + idx + 1}</td>
                       <td className="px-4 py-3 font-medium">{g.name}</td>
                       <td className="px-4 py-3 text-muted-foreground">{g.branch_name || getBranchName(g.branch_id)}</td>
                       <td className="px-4 py-3 text-center">
@@ -238,6 +238,7 @@ const GroupsPage = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">#</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Familya</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ismi</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Telefon</th>
@@ -252,18 +253,19 @@ const GroupsPage = () => {
                 {groupsByIdLoading ? (
                   [...Array(3)].map((_, i) => (
                     <tr key={i} className="border-b border-border/50">
-                      <td colSpan={8} className="p-4"><Skeleton className="h-5 w-full" /></td>
+                      <td colSpan={9} className="p-4"><Skeleton className="h-5 w-full" /></td>
                     </tr>
                   ))
                 ) : groupData?.active_students === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-muted-foreground">
+                    <td colSpan={9} className="py-12 text-center text-muted-foreground">
                       Bu guruhda talabalar topilmadi
                     </td>
                   </tr>
                 ) : (
-                  groupData?.students?.map((s) => (
+                  groupData?.students?.map((s, idx) => (
                     <tr key={s.id} className="table-row-striped border-b border-border/50">
+                      <td className="px-4 py-3 text-center text-muted-foreground">{idx + 1}</td>
                       <td className="px-4 py-3 font-medium">{s?.last_name}</td>
                       <td className="px-4 py-3">{s?.first_name}</td>
                       <td className="px-4 py-3 text-muted-foreground">{s?.phone}</td>

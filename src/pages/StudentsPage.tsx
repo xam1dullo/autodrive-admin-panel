@@ -8,6 +8,7 @@ import {
   useDeleteStudent,
 } from "@/services/studentService";
 import { useBranches } from "@/services/branchService";
+import { useOperators } from "@/services/operatorService";
 import { CourseType, Student } from "@/types/student";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -65,6 +66,7 @@ const StudentsPage = () => {
     200,
   );
   const { data: branches } = useBranches();
+  const { data: operators } = useOperators();
   const createMutation = useCreateStudent();
   const updateMutation = useUpdateStudent();
   const deleteMutation = useDeleteStudent();
@@ -90,7 +92,6 @@ const StudentsPage = () => {
 
   const { currentPage, totalPages, paginatedItems, setCurrentPage } =
     usePagination(filtered);
-  
 
   const handleDelete = () => {
     if (!deleteId) return;
@@ -136,6 +137,9 @@ const StudentsPage = () => {
     setEditStudent(null);
     setModalOpen(true);
   };
+
+  // Calculate the starting index for current page
+  const startIndex = (currentPage - 1) * 10;
 
   return (
     <div className="space-y-6">
@@ -258,6 +262,9 @@ const StudentsPage = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
+                <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                  #
+                </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                   Familya
                 </th>
@@ -357,11 +364,14 @@ const StudentsPage = () => {
                       </td>
                     </tr>
                   ))
-                : paginatedItems?.map((s) => (
+                : paginatedItems?.map((s, idx) => (
                     <tr
                       key={s.id}
                       className="table-row-striped border-b border-border/50"
                     >
+                      <td className="px-4 py-3 text-center text-muted-foreground">
+                        {startIndex + idx + 1}
+                      </td>
                       <td className="px-4 py-3 font-medium">{s.last_name}</td>
                       <td className="px-4 py-3">{s.first_name}</td>
                       <td className="px-4 py-3 text-muted-foreground">
@@ -487,12 +497,14 @@ const StudentsPage = () => {
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
-                          <button
-                            onClick={() => setDeleteId(s.id)}
-                            className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          {isOwner() && (
+                            <button
+                              onClick={() => setDeleteId(s.id)}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -520,6 +532,7 @@ const StudentsPage = () => {
         loading={createMutation.isPending || updateMutation.isPending}
         student={editStudent}
         courseType={courseType}
+        operators={operators || []}
       />
 
       <ConfirmDialog

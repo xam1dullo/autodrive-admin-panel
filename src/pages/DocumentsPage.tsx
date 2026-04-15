@@ -19,6 +19,8 @@ const DocumentsPage = () => {
   );
   const { currentPage, totalPages, paginatedItems, setCurrentPage } = usePagination(filtered);
 
+  const startIndex = (currentPage - 1) * 10;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -38,6 +40,7 @@ const DocumentsPage = () => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">#</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Talaba</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Hujjat turi</th>
               <th className="px-4 py-3 text-center font-medium text-muted-foreground">Holati</th>
@@ -46,8 +49,9 @@ const DocumentsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {paginatedItems.map((d) => (
+            {paginatedItems.map((d, idx) => (
               <tr key={d.id} className="table-row-striped border-b border-border/50">
+                <td className="px-4 py-3 text-center text-muted-foreground">{startIndex + idx + 1}</td>
                 <td className="px-4 py-3 font-medium">{d.student_name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{d.doc_type}</td>
                 <td className="px-4 py-3 text-center">

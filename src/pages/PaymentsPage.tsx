@@ -55,6 +55,8 @@ const PaymentsPage = () => {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string>("all");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("all");
+  const [courseTypeFilter, setCourseTypeFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
 
@@ -89,6 +91,12 @@ const PaymentsPage = () => {
     if (paymentStatus === "paid") matchStatus = p.remaining_debt <= 0;
     else if (paymentStatus === "unpaid") matchStatus = p.remaining_debt > 0;
 
+    let matchPaymentMethod = true;
+    if (paymentMethodFilter !== "all") matchPaymentMethod = p.payment_method === paymentMethodFilter;
+
+    let matchCourseType = true;
+    if (courseTypeFilter !== "all") matchCourseType = p.course_type === courseTypeFilter;
+
     let matchDate = true;
     if (dateFrom || dateTo) {
       const pDate = new Date(p.date);
@@ -100,7 +108,7 @@ const PaymentsPage = () => {
       }
     }
 
-    return matchSearch && matchStatus && matchDate;
+    return matchSearch && matchStatus && matchPaymentMethod && matchCourseType && matchDate;
   });
 
   const { currentPage, totalPages, paginatedItems, setCurrentPage } =
@@ -122,6 +130,8 @@ const PaymentsPage = () => {
       onError: () => toast.error("Xatolik yuz berdi"),
     });
   };
+
+  const startIndex = (currentPage - 1) * 10;
 
   return (
     <div className="space-y-6">
@@ -197,6 +207,28 @@ const PaymentsPage = () => {
             <SelectItem value="all">Hammasi</SelectItem>
             <SelectItem value="paid">To'lagan</SelectItem>
             <SelectItem value="unpaid">To'lamagan</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+          <SelectTrigger className="w-40 bg-secondary border-border">
+            <SelectValue placeholder="To'lov turi" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Hamma</SelectItem>
+            <SelectItem value="naqd">Naqd</SelectItem>
+            <SelectItem value="karta">Karta</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={courseTypeFilter} onValueChange={setCourseTypeFilter}>
+          <SelectTrigger className="w-40 bg-secondary border-border">
+            <SelectValue placeholder="Kurs turi" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Hamma</SelectItem>
+            <SelectItem value="avto_maktab">Avto maktab</SelectItem>
+            <SelectItem value="tezkor">Tezkor</SelectItem>
           </SelectContent>
         </Select>
 
@@ -277,6 +309,9 @@ const PaymentsPage = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
+                <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                  #
+                </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                   Talaba
                 </th>
@@ -307,16 +342,19 @@ const PaymentsPage = () => {
               {isLoading
                 ? [...Array(4)].map((_, i) => (
                     <tr key={i} className="border-b border-border/50">
-                      <td colSpan={8} className="p-4">
+                      <td colSpan={9} className="p-4">
                         <Skeleton className="h-5" />
                       </td>
                     </tr>
                   ))
-                : paginatedItems?.map((p) => (
+                : paginatedItems?.map((p, idx) => (
                     <tr
                       key={p.id}
                       className="table-row-striped border-b border-border/50"
                     >
+                      <td className="px-4 py-3 text-center text-muted-foreground">
+                        {startIndex + idx + 1}
+                      </td>
                       <td className="px-4 py-3 font-medium">
                         {p.student_name}
                       </td>

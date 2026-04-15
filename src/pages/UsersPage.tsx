@@ -13,6 +13,8 @@ const UsersPage = () => {
   const { data: users, isLoading } = useUsers();
   const { currentPage, totalPages, paginatedItems, setCurrentPage } = usePagination(users || []);
 
+  const startIndex = (currentPage - 1) * 10;
+
   return (
     <div className="space-y-6">
       <div>
@@ -25,6 +27,7 @@ const UsersPage = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
+                <th className="px-4 py-3 text-center font-medium text-muted-foreground">#</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Telefon</th>
                 <th className="px-4 py-3 text-center font-medium text-muted-foreground">Rol</th>
@@ -37,11 +40,12 @@ const UsersPage = () => {
               {isLoading
                 ? [...Array(3)].map((_, i) => (
                     <tr key={i} className="border-b border-border/50">
-                      <td colSpan={6} className="p-4"><Skeleton className="h-5 w-full" /></td>
+                      <td colSpan={7} className="p-4"><Skeleton className="h-5 w-full" /></td>
                     </tr>
                   ))
-                : paginatedItems.map((u) => (
+                : paginatedItems.map((u, idx) => (
                     <tr key={u.id} className="table-row-striped border-b border-border/50">
+                      <td className="px-4 py-3 text-center text-muted-foreground">{startIndex + idx + 1}</td>
                       <td className="px-4 py-3 font-medium">{u.email}</td>
                       <td className="px-4 py-3 text-muted-foreground">{u.phone || "—"}</td>
                       <td className="px-4 py-3 text-center">

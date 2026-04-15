@@ -6,25 +6,15 @@ import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationControls from "@/components/ui/PaginationControls";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useOperators,
-  useCreateOperator,
-  useUpdateOperator,
-  useDeleteOperator,
+  useOperators, useCreateOperator, useUpdateOperator, useDeleteOperator,
 } from "@/services/operatorService";
 import { useBranches } from "@/services/branchService";
 import { toast } from "sonner";
@@ -37,7 +27,6 @@ const OperatorsPage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ fullName: "", phone: "", branchId: "" });
   const { data: operators, isLoading } = useOperators();
-  console.log("Operators:", operators);
   const { data: branches } = useBranches();
   const createMut = useCreateOperator();
   const updateMut = useUpdateOperator();
@@ -59,35 +48,21 @@ const OperatorsPage = () => {
 
   const openEdit = (o: User) => {
     setEditItem(o);
-    setForm({
-      fullName: o.name || "",
-      phone: o.phone || "",
-      branchId: o.branch_id || "",
-    });
+    setForm({ fullName: o.name || "", phone: o.phone || "", branchId: o.branch_id || "" });
     setModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName.trim() || !form.phone.trim()) return;
-
     if (editItem) {
-      updateMut.mutate(
-        { id: editItem.id, ...form },
-        {
-          onSuccess: () => {
-            toast.success("Operator yangilandi");
-            setModalOpen(false);
-          },
-          onError: () => toast.error("Xatolik yuz berdi"),
-        },
-      );
+      updateMut.mutate({ id: editItem.id, ...form }, {
+        onSuccess: () => { toast.success("Operator yangilandi"); setModalOpen(false); },
+        onError: () => toast.error("Xatolik yuz berdi"),
+      });
     } else {
       createMut.mutate(form, {
-        onSuccess: () => {
-          toast.success("Operator qo'shildi");
-          setModalOpen(false);
-        },
+        onSuccess: () => { toast.success("Operator qo'shildi"); setModalOpen(false); },
         onError: () => toast.error("Xatolik yuz berdi"),
       });
     }
@@ -96,10 +71,7 @@ const OperatorsPage = () => {
   const handleDelete = () => {
     if (!deleteId) return;
     deleteMut.mutate(deleteId, {
-      onSuccess: () => {
-        toast.success("Operator o'chirildi");
-        setDeleteId(null);
-      },
+      onSuccess: () => { toast.success("Operator o'chirildi"); setDeleteId(null); },
       onError: () => toast.error("Xatolik yuz berdi"),
     });
   };
@@ -107,14 +79,14 @@ const OperatorsPage = () => {
   const getBranchName = (branchId: string) =>
     (branches || []).find((b) => b.id === branchId)?.name || branchId || "—";
 
+  const startIndex = (currentPage - 1) * 10;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold">Operatorlar</h1>
-          <p className="text-sm text-muted-foreground">
-            {filtered.length} ta operator
-          </p>
+          <p className="text-sm text-muted-foreground">{filtered.length} ta operator</p>
         </div>
         <Button className="gap-2" onClick={openCreate}>
           <Plus className="h-4 w-4" /> Operator qo'shish
@@ -122,74 +94,44 @@ const OperatorsPage = () => {
       </div>
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Qidirish..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 bg-secondary border-border"
-        />
+        <Input placeholder="Qidirish..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-secondary border-border" />
       </div>
       <div className="glass-card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Ism
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Telefon
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Filial
-              </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                Holati
-              </th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">
-                Amallar
-              </th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">#</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ism</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Telefon</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Filial</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Holati</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Amallar</th>
             </tr>
           </thead>
           <tbody>
             {isLoading
               ? [...Array(3)].map((_, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    <td colSpan={5} className="p-4">
-                      <Skeleton className="h-5 w-full" />
-                    </td>
+                    <td colSpan={6} className="p-4"><Skeleton className="h-5 w-full" /></td>
                   </tr>
                 ))
-              : paginatedItems.map((o) => (
-                  <tr
-                    key={o.id}
-                    className="table-row-striped border-b border-border/50"
-                  >
+              : paginatedItems.map((o, idx) => (
+                  <tr key={o.id} className="table-row-striped border-b border-border/50">
+                    <td className="px-4 py-3 text-center text-muted-foreground">{startIndex + idx + 1}</td>
                     <td className="px-4 py-3 font-medium">{o?.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {o?.phone}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {o?.branch_name || getBranchName(o?.branch_id)}
-                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{o?.phone}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{o?.branch_name || getBranchName(o?.branch_id)}</td>
                     <td className="px-4 py-3 text-center">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${o.is_active !== false ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
-                      >
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${o.is_active !== false ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
                         {o.is_active !== false ? "Faol" : "Nofaol"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => openEdit(o)}
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                        >
+                        <button onClick={() => openEdit(o)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button
-                          onClick={() => setDeleteId(o.id)}
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        >
+                        <button onClick={() => setDeleteId(o.id)} className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
@@ -199,96 +141,48 @@ const OperatorsPage = () => {
           </tbody>
         </table>
         {filtered.length === 0 && !isLoading && (
-          <div className="py-12 text-center text-muted-foreground">
-            Operatorlar topilmadi
-          </div>
+          <div className="py-12 text-center text-muted-foreground">Operatorlar topilmadi</div>
         )}
       </div>
 
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 
       <Dialog open={modalOpen} onOpenChange={(o) => !o && setModalOpen(false)}>
         <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="font-heading">
-              {editItem ? "Operatorni tahrirlash" : "Yangi operator qo'shish"}
-            </DialogTitle>
+            <DialogTitle className="font-heading">{editItem ? "Operatorni tahrirlash" : "Yangi operator qo'shish"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Ism *</Label>
-              <Input
-                value={form.fullName}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, fullName: e.target.value }))
-                }
-                required
-                className="bg-secondary border-border"
-              />
+              <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} required className="bg-secondary border-border" />
             </div>
             <div className="space-y-2">
               <Label>Telefon *</Label>
-              <Input
-                value={form.phone}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, phone: e.target.value }))
-                }
-                required
-                placeholder="+998901234567"
-                className="bg-secondary border-border"
-              />
+              <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} required placeholder="+998901234567" className="bg-secondary border-border" />
             </div>
             <div className="space-y-2">
               <Label>Filial</Label>
-              <Select
-                value={form.branchId}
-                onValueChange={(v) => setForm((f) => ({ ...f, branchId: v }))}
-              >
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Tanlang" />
-                </SelectTrigger>
+              <Select value={form.branchId} onValueChange={(v) => setForm((f) => ({ ...f, branchId: v }))}>
+                <SelectTrigger className="bg-secondary border-border"><SelectValue placeholder="Tanlang" /></SelectTrigger>
                 <SelectContent>
                   {(branches || []).map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      {b.name}
-                    </SelectItem>
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setModalOpen(false)}
-              >
-                Bekor qilish
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMut.isPending || updateMut.isPending}
-              >
-                {createMut.isPending || updateMut.isPending
-                  ? "Saqlanmoqda..."
-                  : editItem
-                    ? "Saqlash"
-                    : "Qo'shish"}
+              <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Bekor qilish</Button>
+              <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>
+                {createMut.isPending || updateMut.isPending ? "Saqlanmoqda..." : editItem ? "Saqlash" : "Qo'shish"}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        open={!!deleteId}
-        onClose={() => setDeleteId(null)}
-        onConfirm={handleDelete}
-        loading={deleteMut.isPending}
-      />
+      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} loading={deleteMut.isPending} />
     </div>
   );
 };
