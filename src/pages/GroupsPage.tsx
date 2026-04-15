@@ -185,7 +185,7 @@ const GroupsPage = () => {
                     <tr key={g.id} className="table-row-striped border-b border-border/50 cursor-pointer hover:bg-muted/10" onClick={() => setDetailGroup(g)}>
                       <td className="px-4 py-3 text-center text-muted-foreground">{startIndex + idx + 1}</td>
                       <td className="px-4 py-3 font-medium">{g.name}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{g.branch_name || getBranchName(g.branch_id)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{g?.branch_name}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${g.course_type === "avto_maktab" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent-foreground"}`}>
                           {g.course_type === "avto_maktab" ? "Avto maktab" : "Tezkor"}

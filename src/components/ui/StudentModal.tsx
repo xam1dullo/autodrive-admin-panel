@@ -334,7 +334,7 @@ const StudentModal = ({
                     <SelectContent>
                       {groupList.map((g) => (
                         <SelectItem key={g.id} value={g.id}>
-                          {g.name} ({g.branch_name || g.branch_id})
+                          {g.name} 
                         </SelectItem>
                       ))}
                     </SelectContent>
