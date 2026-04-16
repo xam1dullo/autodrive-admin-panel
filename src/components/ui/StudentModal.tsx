@@ -46,7 +46,7 @@ export interface CreateStudentPayload {
   result?: ResultStatus;
   notes?: string;
   status?: string;
-  registered_by?: string;
+  registeredBy?: string;
 }
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -105,7 +105,7 @@ const StudentModal = ({
     initial_payment: 0,
     group_id: "",
     status: "active",
-    registered_by: "",
+    registeredBy: "",
   });
 
   const [form, setForm] = useState<CreateStudentPayload>(defaultForm());
@@ -132,7 +132,7 @@ const StudentModal = ({
           contract_number: student.contract_number,
           notes: student.notes,
           status: student.status || "active",
-          registered_by: student.registered_by || "",
+          registeredBy: student.registered_by || "",
         });
       } else {
         setForm(defaultForm());
@@ -175,7 +175,7 @@ const StudentModal = ({
       has_document: form.has_document,
       notes: form.notes || undefined,
       status: form.status || "active",
-      registered_by: form.registered_by || undefined,
+      registeredBy: form.registeredBy || undefined,
     };
 
     if (courseType === "tezkor") {
@@ -419,8 +419,8 @@ const StudentModal = ({
             <div className="space-y-2">
               <Label>Operator</Label>
               <Select
-                value={form.registered_by || ""}
-                onValueChange={(v) => set("registered_by", v)}
+                value={form.registeredBy || ""}
+                onValueChange={(v) => set("registeredBy", v)}
               >
                 <SelectTrigger className="bg-secondary border-border">
                   <SelectValue placeholder="Operator tanlang" />
