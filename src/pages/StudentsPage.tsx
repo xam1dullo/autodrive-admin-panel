@@ -39,6 +39,7 @@ const formatMoney = (n: number) => new Intl.NumberFormat("uz-UZ").format(n);
 
 export const formatDate = (d: string) => {
   try {
+    if (!d) return "—";
     const date = new Date(d);
     return format(date, "dd.MM.yyyy");
   } catch {
