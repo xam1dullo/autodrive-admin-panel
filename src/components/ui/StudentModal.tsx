@@ -69,6 +69,7 @@ interface StudentModalProps {
   student?: Student | null;
   courseType: CourseType;
   operators?: User[];
+  disabledFields?: string[];
 }
 
 const StudentModal = ({
