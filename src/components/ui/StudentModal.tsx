@@ -80,6 +80,7 @@ const StudentModal = ({
   student,
   courseType,
   operators = [],
+  disabledFields = [],
 }: StudentModalProps) => {
   const { isOwner, user } = useAuthStore();
   const { data: branches } = useBranches();
