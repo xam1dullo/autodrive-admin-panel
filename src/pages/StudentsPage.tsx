@@ -452,7 +452,7 @@ const StudentsPage = () => {
                           </td>
                           <td className="px-4 py-3">{s.group_name}</td>
                           <td className="px-4 py-3 text-muted-foreground">
-                            {s.completion_date}
+                            {formatDate(s.completion_date)}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span
