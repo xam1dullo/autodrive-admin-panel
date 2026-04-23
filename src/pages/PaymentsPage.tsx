@@ -40,9 +40,20 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { formatDate } from "./StudentsPage";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationControls from "@/components/ui/PaginationControls";
+
+
+export const formatDate = (d: string) => {
+  try {
+    if (!d) return "—";
+    const date = new Date(d);
+    
+    return format(date, "dd.MM.yyyy HH:mm:ss");
+  } catch {
+    return d;
+  }
+};
 
 const formatMoney = (n: number) =>
   new Intl.NumberFormat("uz-UZ").format(n) + " so'm";
