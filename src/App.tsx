@@ -27,31 +27,96 @@ const OwnerRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="filiallar" element={<OwnerRoute><BranchesPage /></OwnerRoute>} />
-            <Route path="guruhlar" element={<GroupsPage />} />
-            <Route path="talabalar" element={<StudentsPage />} />
-            <Route path="tolovlar" element={<PaymentsPage />} />
-            {/* <Route path="hujjatlar" element={<DocumentsPage />} /> */}
-            <Route path="operatorlar" element={<OperatorsPage />} />
-            <Route path="oqituvchilar" element={<TeachersPage />} />
-            <Route path="foydalanuvchilar" element={<OwnerRoute><UsersPage /></OwnerRoute>} />
-            <Route path="profile" element={<ProfilePage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// const App = () => (
+//   <QueryClientProvider client={queryClient}>
+//     <TooltipProvider>
+//       <Sonner />
+//       <BrowserRouter>
+//         <Routes>
+//           <Route path="/login" element={<LoginPage />} />
+//           <Route
+//             path="/"
+//             element={
+//               <ProtectedRoute>
+//                 <AppLayout />
+//               </ProtectedRoute>
+//             }
+//           >
+//             <Route index element={<Navigate to="/dashboard" replace />} />
+//             <Route path="dashboard" element={<DashboardPage />} />
+//             <Route
+//               path="filiallar"
+//               element={
+//                 <OwnerRoute>
+//                   <BranchesPage />
+//                 </OwnerRoute>
+//               }
+//             />
+//             <Route path="guruhlar" element={<GroupsPage />} />
+//             <Route path="talabalar" element={<StudentsPage />} />
+//             <Route path="tolovlar" element={<PaymentsPage />} />
+//             {/* <Route path="hujjatlar" element={<DocumentsPage />} /> */}
+//             <Route path="operatorlar" element={<OperatorsPage />} />
+//             <Route path="oqituvchilar" element={<TeachersPage />} />
+//             <Route
+//               path="foydalanuvchilar"
+//               element={
+//                 <OwnerRoute>
+//                   <UsersPage />
+//                 </OwnerRoute>
+//               }
+//             />
+//             <Route path="profile" element={<ProfilePage />} />
+//           </Route>
+//           <Route path="*" element={<NotFound />} />
+//         </Routes>
+//       </BrowserRouter>
+//     </TooltipProvider>
+//   </QueryClientProvider>
+// );
+
+
+const App = () => {
+  if (true) {
+    return (
+      <div style={{
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "24px",
+        color: "red",
+      }}>
+        Error
+      </div>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="filiallar" element={<OwnerRoute><BranchesPage /></OwnerRoute>} />
+              <Route path="guruhlar" element={<GroupsPage />} />
+              <Route path="talabalar" element={<StudentsPage />} />
+              <Route path="tolovlar" element={<PaymentsPage />} />
+              <Route path="operatorlar" element={<OperatorsPage />} />
+              <Route path="oqituvchilar" element={<TeachersPage />} />
+              <Route path="foydalanuvchilar" element={<OwnerRoute><UsersPage /></OwnerRoute>} />
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
