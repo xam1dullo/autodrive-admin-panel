@@ -46,7 +46,7 @@ export interface CreateStudentPayload {
   result?: ResultStatus;
   notes?: string;
   status?: string;
-  registeredBy?: string;
+  registered_by?: string;
 }
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -106,6 +106,7 @@ const StudentModal = ({
     initial_payment: 0,
     group_id: "",
     status: "active",
+    registered_by: "",
   });
 
   const [form, setForm] = useState<CreateStudentPayload>(defaultForm());
@@ -134,6 +135,7 @@ const StudentModal = ({
           contract_number: student.contract_number || null,
           notes: student.notes === undefined ? "" : student.notes,
           status: student.status || "active",
+          registered_by: student.registered_by || "",
         });
         console.log("Loaded student into form:", student.group_id);
       } else {
@@ -182,6 +184,7 @@ const StudentModal = ({
       has_document: form.has_document,
       notes: form.notes || undefined,
       status: form.status || "active",
+      registered_by: form.registered_by || undefined,
     };
 
     if (courseType === "tezkor") {
@@ -445,6 +448,33 @@ const StudentModal = ({
           )}
 
           <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Operator <span className="text-destructive">*</span></Label>
+              {operators.length > 0 ? (
+                <Select
+                  value={form.registered_by || ""}
+                  onValueChange={(v) => set("registered_by", v)}
+                >
+                  <SelectTrigger className="bg-secondary border-border">
+                    <SelectValue placeholder="Operatorni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {operators.map((op) => (
+                      <SelectItem key={op.id} value={op.name || op.email}>
+                        {op.name || op.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={form.registered_by || ""}
+                  onChange={(e) => set("registered_by", e.target.value)}
+                  placeholder="Operator ismi"
+                  className="bg-secondary border-border"
+                />
+              )}
+            </div>
             <div className="space-y-2">
               <Label>Natijasi</Label>
               <Select
