@@ -362,7 +362,7 @@ const GroupsPage = () => {
                         </span>
                       </td>
                       <td className="px-3 py-3 text-center text-muted-foreground">
-                        {s?.payment_method === "naqd" ? "Naqd" : "Karta"}
+                        {s?.payment_method === "naqd" ? "Naqd" : s?.payment_method === "karta" ? "Karta" : "Perechisleniya"}
                       </td>
                       <td className="px-3 py-3 text-center">
                         <span className={s?.has_document ? "text-success" : "text-destructive"}>

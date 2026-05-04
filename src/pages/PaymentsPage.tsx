@@ -189,7 +189,7 @@ const PaymentsPage = () => {
       "Umumiy narx": p.total_price,
       "Bu to'lov": p.amount_paid,
       "Joriy qoldiq": p.remaining_debt,
-      Turi: p.payment_method === "naqd" ? "Naqd" : "Karta",
+      Turi: p.payment_method === "naqd" ? "Naqd" : p.payment_method === "karta" ? "Karta" : "Perechisleniya",
       Operator: p.recorded_by || "—",
       Sana: formatDate(p.date),
     }));
@@ -604,7 +604,7 @@ const PaymentsPage = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center text-xs">
-                        {p.payment_method === "naqd" ? "Naqd" : "Karta"}
+                        {p.payment_method === "naqd" ? "Naqd" : p.payment_method === "karta" ? "Karta" : "Perechisleniya"}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">
                         {p.recorded_by || "—"}

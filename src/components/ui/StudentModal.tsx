@@ -144,13 +144,8 @@ const StudentModal = ({
 
   useEffect(() => {
     if (student) {
-      if (courseType === "tezkor") {
-        // amount_paid in edit mode = additional new payment (backend adds it)
-        setDebt(Math.max(0, (student.debt || 0) - (form.amount_paid || 0)));
-      } else {
-        // avto_maktab edit: initial_payment is read-only, debt unchanged
-        setDebt(student.debt || 0);
-      }
+      // Both course types: amount_paid in edit mode = additional new payment (backend adds it)
+      setDebt(Math.max(0, (student.debt || 0) - (form.amount_paid || 0)));
     } else {
       const total = form.total_price || 0;
       const paid =
@@ -198,6 +193,10 @@ const StudentModal = ({
       payload.completion_date = form.completion_date || undefined;
       payload.contract_number = form.contract_number || undefined;
       payload.o83 = form.o83;
+      // Edit-only: send additional payment for avto_maktab too (backend handles dto.amount_paid as additive on update)
+      if (student && (form.amount_paid || 0) > 0) {
+        payload.amount_paid = form.amount_paid;
+      }
     }
     onSubmit(payload);
   };
@@ -381,6 +380,19 @@ const StudentModal = ({
                   />
                 </div>
               </div>
+              {student && (
+                <div className="space-y-2">
+                  <Label>Qo'shimcha to'lov</Label>
+                  <Input
+                    type="number"
+                    value={form.amount_paid || ""}
+                    onChange={(e) => setNum("amount_paid", e.target.value)}
+                    min={0}
+                    placeholder="0 (yangi to'lov qo'shish uchun)"
+                    className="bg-secondary border-border"
+                  />
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>
