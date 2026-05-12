@@ -231,7 +231,7 @@ const PaymentsPage = () => {
     const ws = XLSX.utils.json_to_sheet([headers]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "To'lovlar");
-    XLSX.writeFile(wb, `tolovlar_template_${format(new Date(), "dd-MM-yyyy")}.xlsx`);
+    XLSX.writeFile(wb, `tolovlar_${format(new Date(), "dd-MM-yyyy")}.xlsx`);
   };
 
   const startIndex = (currentPage - 1) * 10;
