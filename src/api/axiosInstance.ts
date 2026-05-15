@@ -9,10 +9,21 @@ const axiosInstance = axios.create({
   withCredentials: true,  // send httpOnly cookie on every request
 });
 
+// Endpoints under /platform/* are platform-admin only and intentionally
+// list every company — they must never be scoped to one. Everything else
+// gets `company_id` appended when a dev user has a company selected.
+const PLATFORM_PREFIX = /^\/platform(\/|$)/;
+
 axiosInstance.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
+  const { token, user, activeCompanyId } = useAuthStore.getState();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const url = (config.url ?? '').replace(API_BASE_URL, '');
+  const isPlatformRoute = PLATFORM_PREFIX.test(url);
+  if (user?.role === 'dev' && activeCompanyId && !isPlatformRoute) {
+    config.params = { ...(config.params ?? {}), company_id: activeCompanyId };
   }
   return config;
 });
