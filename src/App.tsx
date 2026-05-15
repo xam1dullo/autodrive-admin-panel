@@ -18,6 +18,8 @@ import GroupsPage from "./pages/GroupsPage";
 import UsersPage from "./pages/UsersPage";
 import ProfilePage from "./pages/ProfilePage";
 import AuditLogPage from "./pages/AuditLogPage";
+import CompaniesPage from "./pages/CompaniesPage";
+import PlatformUsersPage from "./pages/PlatformUsersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,12 @@ const queryClient = new QueryClient();
 const OwnerRoute = ({ children }: { children: React.ReactNode }) => {
   const isOwner = useAuthStore((s) => s.isOwner);
   if (!isOwner()) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+};
+
+const DevRoute = ({ children }: { children: React.ReactNode }) => {
+  const isDev = useAuthStore((s) => s.isDev);
+  if (!isDev()) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 };
 
@@ -46,6 +54,8 @@ const App = () => (
             <Route path="operatorlar" element={<OperatorsPage />} />
             <Route path="oqituvchilar" element={<TeachersPage />} />
             <Route path="foydalanuvchilar" element={<OwnerRoute><UsersPage /></OwnerRoute>} />
+            <Route path="kompaniyalar" element={<DevRoute><CompaniesPage /></DevRoute>} />
+            <Route path="platform-foydalanuvchilar" element={<DevRoute><PlatformUsersPage /></DevRoute>} />
             <Route path="audit" element={<OwnerRoute><AuditLogPage /></OwnerRoute>} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

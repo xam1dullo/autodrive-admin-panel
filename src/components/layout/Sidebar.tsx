@@ -15,38 +15,51 @@ import {
   Layers,
   UserCog,
   ShieldCheck,
+  Briefcase,
+  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-const navItems = [
+type NavItem = {
+  path: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  ownerOnly?: boolean;
+  devOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
   {
     path: "/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    ownerOnly: false,
+  },
+  { path: "/kompaniyalar", label: "Kompaniyalar", icon: Briefcase, devOnly: true },
+  {
+    path: "/platform-foydalanuvchilar",
+    label: "Platform Users",
+    icon: KeyRound,
+    devOnly: true,
   },
   { path: "/filiallar", label: "Filiallar", icon: Building2, ownerOnly: true },
-  { path: "/guruhlar", label: "Guruhlar", icon: Layers, ownerOnly: false },
+  { path: "/guruhlar", label: "Guruhlar", icon: Layers },
   {
     path: "/talabalar",
     label: "Talabalar",
     icon: GraduationCap,
-    ownerOnly: false,
   },
-  { path: "/tolovlar", label: "To'lovlar", icon: CreditCard, ownerOnly: false },
-  // { path: "/hujjatlar", label: "Hujjatlar", icon: FileText, ownerOnly: false },
+  { path: "/tolovlar", label: "To'lovlar", icon: CreditCard },
+  // { path: "/hujjatlar", label: "Hujjatlar", icon: FileText },
   {
     path: "/operatorlar",
     label: "Operatorlar",
     icon: Headphones,
-    ownerOnly: false,
   },
   {
     path: "/oqituvchilar",
     label: "O'qituvchilar",
     icon: Users,
-    ownerOnly: false,
   },
   {
     path: "/foydalanuvchilar",
@@ -55,15 +68,19 @@ const navItems = [
     ownerOnly: true,
   },
   { path: "/audit", label: "Audit log", icon: ShieldCheck, ownerOnly: true },
-  { path: "/profile", label: "Profil", icon: User, ownerOnly: false },
+  { path: "/profile", label: "Profil", icon: User },
 ];
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { user, logout, isOwner } = useAuthStore();
+  const { user, logout, isOwner, isDev } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
 
-  const filteredItems = navItems.filter((item) => !item.ownerOnly || isOwner());
+  const filteredItems = navItems.filter((item) => {
+    if (item.devOnly) return isDev();
+    if (item.ownerOnly) return isOwner() || isDev();
+    return true;
+  });
 
   return (
     <aside
@@ -111,7 +128,11 @@ export const Sidebar = () => {
               {user?.name || user?.email}
             </p>
             <p className="text-xs text-muted-foreground">
-              {user?.role === "owner" ? "Biznes egasi" : user?.branch_name}
+              {user?.role === "dev"
+                ? "Platforma admin"
+                : user?.role === "owner"
+                  ? "Biznes egasi"
+                  : user?.branch_name}
             </p>
           </div>
         )}
