@@ -33,6 +33,7 @@ import { usePagination } from "@/hooks/usePagination";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { extractErrorMessage } from "@/lib/errors";
 import { formatPhone } from "@/lib/phoneFormater";
+import { validateNewPassword } from "@/lib/password";
 import { User, UserRole } from "@/types/user";
 import { DataCard } from "@/components/ui/DataCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -188,8 +189,9 @@ const PlatformUsersPage = () => {
         },
       );
     } else {
-      if (form.password.length < 8) {
-        toast.error("Parol kamida 8 ta belgi bo'lishi kerak");
+      const policyError = validateNewPassword(form.password);
+      if (policyError) {
+        toast.error(policyError);
         return;
       }
       createMut.mutate(
@@ -227,8 +229,9 @@ const PlatformUsersPage = () => {
   const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetTarget) return;
-    if (newPassword.length < 8) {
-      toast.error("Parol kamida 8 ta belgi bo'lishi kerak");
+    const policyError = validateNewPassword(newPassword);
+    if (policyError) {
+      toast.error(policyError);
       return;
     }
     resetMut.mutate(
@@ -516,7 +519,7 @@ const PlatformUsersPage = () => {
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   required
                   minLength={8}
-                  placeholder="kamida 8 ta belgi"
+                  placeholder="8+ belgi, raqam va katta harf"
                   className="bg-secondary border-border"
                 />
               </div>
@@ -628,7 +631,7 @@ const PlatformUsersPage = () => {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={8}
-                placeholder="kamida 8 ta belgi"
+                placeholder="8+ belgi, raqam va katta harf"
                 className="bg-secondary border-border"
               />
             </div>

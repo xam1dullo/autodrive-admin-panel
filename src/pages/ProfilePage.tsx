@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useChangePassword } from "@/services/authService";
 import { useUpdateUser } from "@/services/userService";
 import { extractErrorMessage } from "@/lib/errors";
+import { validateNewPassword } from "@/lib/password";
 
 const ROLE_LABEL: Record<string, string> = {
   dev: "Platforma admin",
@@ -59,8 +60,9 @@ const ProfilePage = () => {
 
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwords.newPassword.length < 8) {
-      toast.error("Yangi parol kamida 8 ta belgi bo'lishi kerak");
+    const policyError = validateNewPassword(passwords.newPassword);
+    if (policyError) {
+      toast.error(policyError);
       return;
     }
     if (passwords.newPassword !== passwords.confirmPassword) {
@@ -156,7 +158,7 @@ const ProfilePage = () => {
         <div>
           <h3 className="font-heading font-semibold">Parolni o'zgartirish</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Yangi parol kamida 8 ta belgidan iborat bo'lishi kerak
+            Kamida 8 ta belgi, 1 ta raqam va 1 ta katta harf bo'lishi kerak
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
