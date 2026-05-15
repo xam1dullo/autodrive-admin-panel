@@ -7,11 +7,14 @@ export interface User {
   role: UserRole;
   branch_id?: string;
   branch_name?: string;
+  company_id?: string;
+  company_name?: string;
   phone?: string;
   avatar?: string;
   specialization?: Specialization;
   is_active?: boolean;
   created_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface LoginCredentials {

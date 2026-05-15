@@ -9,6 +9,7 @@ interface AuthState {
   setAuth: (token: string, user: User) => void;
   logout: () => void;
   isOwner: () => boolean;
+  isDev: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
       logout: () => set({ token: null, user: null, isAuthenticated: false }),
       isOwner: () => get().user?.role === 'owner',
+      isDev: () => get().user?.role === 'dev',
     }),
     {
       name: 'autodrive-auth',
