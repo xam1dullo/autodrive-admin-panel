@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -6,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -30,6 +32,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { PaymentMethod } from "@/types/student";
 
 export interface CreatePaymentPayload {
@@ -58,6 +68,18 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
   karta: "Karta",
 };
 
+const paymentSchema = z.object({
+  student_id: z.string().min(1, "Talabani tanlang"),
+  amount: z.coerce
+    .number({ invalid_type_error: "To'lov miqdorini kiriting" })
+    .positive("To'lov miqdori 0 dan katta bo'lishi kerak"),
+  payment_method: z.enum(["naqd", "karta"], {
+    required_error: "To'lov turini tanlang",
+  }),
+});
+
+type PaymentFormValues = z.infer<typeof paymentSchema>;
+
 const PaymentModal = ({
   open,
   onClose,
@@ -65,27 +87,29 @@ const PaymentModal = ({
   loading,
   students,
 }: PaymentModalProps) => {
-  const [form, setForm] = useState<CreatePaymentPayload>({
-    student_id: "",
-    amount: 0,
-    payment_method: "naqd",
+  const form = useForm<PaymentFormValues>({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      student_id: "",
+      amount: 0,
+      payment_method: "naqd",
+    },
   });
 
   const [studentPopoverOpen, setStudentPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm({ student_id: "", amount: 0, payment_method: "naqd" });
+      form.reset({ student_id: "", amount: 0, payment_method: "naqd" });
     }
-  }, [open]);
+  }, [open, form]);
 
-  const selectedStudent = students.find((s) => s.id === form.student_id);
+  const studentId = form.watch("student_id");
+  const selectedStudent = students.find((s) => s.id === studentId);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.student_id || form.amount <= 0) return;
-    onSubmit(form);
-  };
+  const handleSubmit = form.handleSubmit((values) => {
+    onSubmit(values);
+  });
 
   const formatMoney = (n: number) => new Intl.NumberFormat("uz-UZ").format(n);
 
@@ -96,148 +120,156 @@ const PaymentModal = ({
           <DialogTitle className="font-heading">To'lov qo'shish</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Talaba tanlash */}
-          <div className="space-y-2">
-            <Label>Talaba *</Label>
-            {/* <Select
-              value={form.student_id}
-              onValueChange={(v) => setForm((p) => ({ ...p, student_id: v }))}
-            >
-              <SelectTrigger className="bg-secondary border-border">
-                <SelectValue placeholder="Talabani tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                {students.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.last_name} {s.first_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select> */}
-            <Popover
-              open={studentPopoverOpen}
-              onOpenChange={setStudentPopoverOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  className="w-full justify-between bg-secondary border-border font-normal"
-                >
-                  {selectedStudent
-                    ? `${selectedStudent.last_name} ${selectedStudent.first_name}`
-                    : "Talabani tanlang"}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                onWheel={(e) => e.stopPropagation()}
-                style={{ width: "var(--radix-popover-trigger-width)" }}
-                className="w-full p-0"
-                align="start"
-              >
-                <Command>
-                  <CommandInput placeholder="Talabani qidiring..." />
-                  <CommandList >
-                    <CommandEmpty>Talaba topilmadi.</CommandEmpty>
-                    <CommandGroup>
-                      {students.map((s) => (
-                        <CommandItem
-                          key={s.id}
-                          value={`${s.last_name} ${s.first_name}`}
-                          onSelect={() => {
-                            setForm((p) => ({ ...p, student_id: s.id }));
-                            setStudentPopoverOpen(false);
-                          }}
+        <Form {...form}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Talaba tanlash */}
+            <FormField
+              control={form.control}
+              name="student_id"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Talaba *</FormLabel>
+                  <Popover
+                    open={studentPopoverOpen}
+                    onOpenChange={setStudentPopoverOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between bg-secondary border-border font-normal"
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              form.student_id === s.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {s.last_name} {s.first_name}
-                          {s.debt !== undefined && s.debt > 0 && (
-                            <span className="ml-auto text-xs text-destructive">
-                              {formatMoney(s.debt)} so'm
-                            </span>
-                          )}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Talaba qarzdorligi ko'rsatish */}
-          {selectedStudent && selectedStudent.debt !== undefined && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm">
-              <span className="text-muted-foreground">Qarzdorlik: </span>
-              <span className="font-medium text-destructive">
-                {formatMoney(selectedStudent.debt)} so'm
-              </span>
-            </div>
-          )}
-
-          {/* Miqdor */}
-          <div className="space-y-2">
-            <Label>To'lov miqdori (so'm) *</Label>
-            <Input
-              type="number"
-              value={form.amount || ""}
-              onChange={(e) =>
-                setForm((p) => ({
-                  ...p,
-                  amount: e.target.value === "" ? 0 : Number(e.target.value),
-                }))
-              }
-              required
-              min={1}
-              placeholder="0"
-              className="bg-secondary border-border"
+                          {selectedStudent
+                            ? `${selectedStudent.last_name} ${selectedStudent.first_name}`
+                            : "Talabani tanlang"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      onWheel={(e) => e.stopPropagation()}
+                      style={{ width: "var(--radix-popover-trigger-width)" }}
+                      className="w-full p-0"
+                      align="start"
+                    >
+                      <Command>
+                        <CommandInput placeholder="Talabani qidiring..." />
+                        <CommandList>
+                          <CommandEmpty>Talaba topilmadi.</CommandEmpty>
+                          <CommandGroup>
+                            {students.map((s) => (
+                              <CommandItem
+                                key={s.id}
+                                value={`${s.last_name} ${s.first_name}`}
+                                onSelect={() => {
+                                  field.onChange(s.id);
+                                  setStudentPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value === s.id
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                {s.last_name} {s.first_name}
+                                {s.debt !== undefined && s.debt > 0 && (
+                                  <span className="ml-auto text-xs text-destructive">
+                                    {formatMoney(s.debt)} so'm
+                                  </span>
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* To'lov turi */}
-          <div className="space-y-2">
-            <Label>To'lov turi *</Label>
-            <Select
-              value={form.payment_method}
-              onValueChange={(v) =>
-                setForm((p) => ({ ...p, payment_method: v as PaymentMethod }))
-              }
-            >
-              <SelectTrigger className="bg-secondary border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(paymentMethodLabels).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>
-                    {v}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Talaba qarzdorligi ko'rsatish */}
+            {selectedStudent && selectedStudent.debt !== undefined && (
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm">
+                <span className="text-muted-foreground">Qarzdorlik: </span>
+                <span className="font-medium text-destructive">
+                  {formatMoney(selectedStudent.debt)} so'm
+                </span>
+              </div>
+            )}
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Bekor qilish
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading || !form.student_id || form.amount <= 0}
-            >
-              {loading ? "Saqlanmoqda..." : "Qo'shish"}
-            </Button>
-          </div>
-        </form>
+            {/* Miqdor */}
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>To'lov miqdori (so'm) *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="0"
+                      className="bg-secondary border-border"
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === "" ? 0 : Number(e.target.value),
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* To'lov turi */}
+            <FormField
+              control={form.control}
+              name="payment_method"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>To'lov turi *</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => field.onChange(v as PaymentMethod)}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-secondary border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.entries(paymentMethodLabels).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>
+                          {v}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Bekor qilish
+              </Button>
+              <Button type="submit" disabled={loading || form.formState.isSubmitting}>
+                {loading ? "Saqlanmoqda..." : "Qo'shish"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

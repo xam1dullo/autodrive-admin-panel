@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Student,
   CourseType,
@@ -13,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -24,6 +26,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/store/authStore";
 import { useBranches } from "@/services/branchService";
 import { useGroups } from "@/services/groupService";
@@ -61,6 +72,42 @@ const resultLabels: Record<ResultStatus, string> = {
   yiqildi: "Yiqildi",
 };
 
+const studentFormSchema = z
+  .object({
+    first_name: z.string().min(1, "Talab qilinadi"),
+    last_name: z.string().min(1, "Talab qilinadi"),
+    phone: z
+      .string()
+      .min(1, "Talab qilinadi")
+      .regex(/^\+?\d{9,15}$/, "Telefon raqami noto'g'ri"),
+    course_type: z.enum(["tezkor", "avto_maktab"]),
+    branch_id: z.string().min(1, "Filial tanlanmagan! Iltimos filial tanlang."),
+    payment_method: z.enum(["naqd", "karta"]).optional(),
+    result: z.enum(["oqimoqda", "topshirdi", "yiqildi"]).optional(),
+    has_document: z.boolean().optional(),
+    o83: z.boolean().optional(),
+    total_price: z.coerce.number().nonnegative("Talab qilinadi"),
+    amount_paid: z.coerce.number().nonnegative().optional(),
+    initial_payment: z.coerce.number().nonnegative().optional(),
+    group_id: z.string().optional(),
+    completion_date: z.string().optional(),
+    contract_number: z.string().optional(),
+    notes: z.string().optional(),
+    status: z.enum(["active", "completed", "dropped", "frozen"]).optional(),
+    registered_by: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.course_type === "avto_maktab" && !data.group_id?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["group_id"],
+        message: "Avto maktab kursi uchun Guruh tanlash shart!",
+      });
+    }
+  });
+
+type StudentFormValues = z.infer<typeof studentFormSchema>;
+
 interface StudentModalProps {
   open: boolean;
   onClose: () => void;
@@ -94,7 +141,7 @@ const StudentModal = ({
     (g) => g.course_type === courseType || !g.course_type,
   );
 
-  const defaultForm = (): CreateStudentPayload => ({
+  const defaultFormValues = (): StudentFormValues => ({
     first_name: "",
     last_name: "",
     phone: "",
@@ -108,17 +155,29 @@ const StudentModal = ({
     amount_paid: 0,
     initial_payment: 0,
     group_id: "",
+    completion_date: "",
+    contract_number: "",
+    notes: "",
     status: "active",
     registered_by: "",
   });
 
-  const [form, setForm] = useState<CreateStudentPayload>(defaultForm());
+  const form = useForm<StudentFormValues>({
+    resolver: zodResolver(studentFormSchema),
+    defaultValues: defaultFormValues(),
+  });
+
   const [debt, setDebt] = useState(0);
+
+  const watchedTotalPrice = form.watch("total_price");
+  const watchedAmountPaid = form.watch("amount_paid");
+  const watchedInitialPayment = form.watch("initial_payment");
+  const watchedBranchId = form.watch("branch_id");
 
   useEffect(() => {
     if (open) {
       if (student) {
-        setForm({
+        form.reset({
           first_name: student.first_name,
           last_name: student.last_name,
           phone: student.phone,
@@ -134,86 +193,71 @@ const StudentModal = ({
           amount_paid: 0,
           initial_payment: student.initial_payment || 0,
           group_id: student.group_id || "",
-          completion_date: student.completion_date === undefined ? "" : student.completion_date,
+          completion_date:
+            student.completion_date === undefined ? "" : student.completion_date,
           contract_number: student.contract_number || "",
           notes: student.notes === undefined ? "" : student.notes,
           status: student.status || "active",
           registered_by: student.registered_by_id || "",
         });
       } else {
-        setForm(defaultForm());
+        form.reset(defaultFormValues());
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [student, courseType, open]);
 
   useEffect(() => {
     if (student) {
       // Both course types: amount_paid in edit mode = additional new payment (backend adds it)
-      setDebt(Math.max(0, (student.debt || 0) - (form.amount_paid || 0)));
+      setDebt(Math.max(0, (student.debt || 0) - (Number(watchedAmountPaid) || 0)));
     } else {
-      const total = form.total_price || 0;
+      const total = Number(watchedTotalPrice) || 0;
       const paid =
         courseType === "tezkor"
-          ? form.amount_paid || 0
-          : form.initial_payment || 0;
+          ? Number(watchedAmountPaid) || 0
+          : Number(watchedInitialPayment) || 0;
       setDebt(Math.max(0, total - paid));
     }
-  }, [form.total_price, form.amount_paid, form.initial_payment, courseType, student]);
+  }, [watchedTotalPrice, watchedAmountPaid, watchedInitialPayment, courseType, student]);
 
-  const set = <K extends keyof CreateStudentPayload>(
-    key: K,
-    value: CreateStudentPayload[K],
-  ) => setForm((prev) => ({ ...prev, [key]: value }));
-  const setNum = (key: keyof CreateStudentPayload, value: string) =>
-    set(key, (value === "" ? 0 : Number(value)) as any);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.branch_id) {
-      alert("Filial tanlanmagan! Iltimos filial tanlang.");
-      return;
-    }
-    if (courseType === "avto_maktab" && !form.group_id?.trim()) {
-      alert("Avto maktab kursi uchun Guruh tanlash shart!");
-      return;
-    }
-
+  const handleSubmit = form.handleSubmit(async (values) => {
     const payload: CreateStudentPayload = {
-      first_name: form.first_name,
-      last_name: form.last_name,
-      phone: form.phone,
+      first_name: values.first_name,
+      last_name: values.last_name,
+      phone: values.phone,
       course_type: courseType,
-      total_price: form.total_price,
-      payment_method: form.payment_method || undefined,
-      branch_id: form.branch_id || undefined,
-      result: form.result,
-      has_document: form.has_document,
-      notes: form.notes || undefined,
-      status: form.status || "active",
-      registered_by: form.registered_by || undefined,
+      total_price: Number(values.total_price),
+      payment_method: values.payment_method || undefined,
+      branch_id: values.branch_id || undefined,
+      result: values.result,
+      has_document: values.has_document,
+      notes: values.notes || undefined,
+      status: values.status || "active",
+      registered_by: values.registered_by || undefined,
     };
 
     if (courseType === "tezkor") {
-      payload.amount_paid = form.amount_paid || 0;
-      payload.group_id = form.group_id || undefined;
+      payload.amount_paid = Number(values.amount_paid) || 0;
+      payload.group_id = values.group_id || undefined;
     } else {
-      payload.initial_payment = form.initial_payment || 0;
-      payload.group_id = form.group_id || undefined;
-      payload.completion_date = form.completion_date || undefined;
-      payload.contract_number = form.contract_number || undefined;
-      payload.o83 = form.o83;
+      payload.initial_payment = Number(values.initial_payment) || 0;
+      payload.group_id = values.group_id || undefined;
+      payload.completion_date = values.completion_date || undefined;
+      payload.contract_number = values.contract_number || undefined;
+      payload.o83 = values.o83;
       // Edit-only: send additional payment for avto_maktab too (backend handles dto.amount_paid as additive on update)
-      if (student && (form.amount_paid || 0) > 0) {
-        payload.amount_paid = form.amount_paid;
+      if (student && (Number(values.amount_paid) || 0) > 0) {
+        payload.amount_paid = Number(values.amount_paid);
       }
     }
-    onSubmit(payload);
-  };
+    await onSubmit(payload);
+  });
 
   const formatMoney = (n: number) => new Intl.NumberFormat("uz-UZ").format(n);
   const currentBranchName =
-    branchList.find((b) => b.id === form.branch_id)?.name ||
-    form.branch_id ||
+    branchList.find((b) => b.id === watchedBranchId)?.name ||
+    watchedBranchId ||
     "";
 
   return (
@@ -228,302 +272,478 @@ const StudentModal = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Familya *</Label>
-              <Input
-                value={form.last_name}
-                onChange={(e) => set("last_name", e.target.value)}
-                required
-                className="bg-secondary border-border"
+        <Form {...form}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Familya *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="bg-secondary border-border"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ismi *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="bg-secondary border-border"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefon *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="+998901234567"
+                        className="bg-secondary border-border"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="branch_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Filial</FormLabel>
+                    {isOwner() ? (
+                      <Select
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-secondary border-border">
+                            <SelectValue placeholder="Tanlang" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {branchList.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <FormControl>
+                        <Input
+                          value={currentBranchName}
+                          disabled
+                          className="bg-muted border-border"
+                        />
+                      </FormControl>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Ismi *</Label>
-              <Input
-                value={form.first_name}
-                onChange={(e) => set("first_name", e.target.value)}
-                required
-                className="bg-secondary border-border"
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="total_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kurs narxi *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        min={0}
+                        disabled={disabledFields.includes("total_price")}
+                        className={`${disabledFields.includes("total_price") ? "bg-muted" : "bg-secondary"} border-border`}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="payment_method"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>To'lov turi</FormLabel>
+                    <Select
+                      value={field.value || "naqd"}
+                      onValueChange={(v) => field.onChange(v as PaymentMethod)}
+                      disabled={disabledFields.includes("payment_method")}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className={`${disabledFields.includes("payment_method") ? "bg-muted" : "bg-secondary"} border-border`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.entries(paymentMethodLabels).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>
+                            {v}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Telefon *</Label>
-              <Input
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                required
-                placeholder="+998901234567"
-                className="bg-secondary border-border"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Filial</Label>
-              {isOwner() ? (
-                <Select
-                  value={form.branch_id || ""}
-                  onValueChange={(v) => set("branch_id", v)}
-                >
-                  <SelectTrigger className="bg-secondary border-border">
-                    <SelectValue placeholder="Tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branchList.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  value={currentBranchName}
-                  disabled
-                  className="bg-muted border-border"
+
+            {courseType === "tezkor" ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="amount_paid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {student ? "Qo'shimcha to'lov" : "To'lov miqdori"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value || ""}
+                            min={0}
+                            placeholder={
+                              student
+                                ? "0 (yangi to'lov qo'shish uchun)"
+                                : "0"
+                            }
+                            className="bg-secondary border-border"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="space-y-2">
+                    <Label>{student ? "Joriy qarzdorlik" : "Qarzdorlik"}</Label>
+                    <Input
+                      value={formatMoney(debt)}
+                      disabled
+                      className="bg-muted border-border text-destructive font-medium"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="group_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Guruh</FormLabel>
+                        <Select
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-secondary border-border">
+                              <SelectValue placeholder="Tanlang" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {groupList.map((g) => (
+                              <SelectItem key={g.id} value={g.id}>
+                                {g.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="initial_payment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Boshlang'ich to'lov</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value || ""}
+                            min={0}
+                            disabled={
+                              !!student ||
+                              disabledFields.includes("initial_payment")
+                            }
+                            className={`${(!!student || disabledFields.includes("initial_payment")) ? "bg-muted" : "bg-secondary"} border-border`}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="space-y-2">
+                    <Label>{student ? "Joriy qarzdorlik" : "Qarzdorlik"}</Label>
+                    <Input
+                      value={formatMoney(debt)}
+                      disabled
+                      className="bg-muted border-border text-destructive font-medium"
+                    />
+                  </div>
+                </div>
+                {student && (
+                  <FormField
+                    control={form.control}
+                    name="amount_paid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Qo'shimcha to'lov</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value || ""}
+                            min={0}
+                            placeholder="0 (yangi to'lov qo'shish uchun)"
+                            className="bg-secondary border-border"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="group_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Guruh <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-secondary border-border">
+                              <SelectValue placeholder="Tanlang" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {groupList.map((g) => (
+                              <SelectItem key={g.id} value={g.id}>
+                                {g.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="completion_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tugatish sanasi</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value || ""}
+                            className="bg-secondary border-border"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contract_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Shartnoma raqami</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="C-201"
+                            className="bg-secondary border-border"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="o83"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value || false}
+                          onCheckedChange={(v) => field.onChange(!!v)}
+                          id="o83"
+                        />
+                      </FormControl>
+                      <FormLabel htmlFor="o83" className="!mt-0">
+                        O83
+                      </FormLabel>
+                    </FormItem>
+                  )}
                 />
-              )}
-            </div>
-          </div>
+              </>
+            )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Kurs narxi *</Label>
-              <Input
-                type="number"
-                value={form.total_price}
-                onChange={(e) => setNum("total_price", e.target.value)}
-                required
-                min={0}
-                disabled={disabledFields.includes("total_price")}
-                className={`${disabledFields.includes("total_price") ? "bg-muted" : "bg-secondary"} border-border`}
+            {operators.length > 0 && (
+              <FormField
+                control={form.control}
+                name="registered_by"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Operator</FormLabel>
+                    <Select
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-secondary border-border">
+                          <SelectValue placeholder="Operatorni tanlang (ixtiyoriy)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {operators.map((op) => (
+                          <SelectItem key={op.id} value={op.id}>
+                            {op.name || op.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="result"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Natijasi</FormLabel>
+                    <Select
+                      value={field.value || "oqimoqda"}
+                      onValueChange={(v) => field.onChange(v as ResultStatus)}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-secondary border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.entries(resultLabels).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>
+                            {v}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="space-y-2">
-              <Label>To'lov turi</Label>
-              <Select
-                value={form.payment_method || "naqd"}
-                onValueChange={(v) => set("payment_method", v as PaymentMethod)}
-                disabled={disabledFields.includes("payment_method")}
-              >
-                <SelectTrigger
-                  className={`${disabledFields.includes("payment_method") ? "bg-muted" : "bg-secondary"} border-border`}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(paymentMethodLabels).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          {courseType === "tezkor" ? (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{student ? "Qo'shimcha to'lov" : "To'lov miqdori"}</Label>
-                  <Input
-                    type="number"
-                    value={form.amount_paid || ""}
-                    onChange={(e) => setNum("amount_paid", e.target.value)}
-                    min={0}
-                    placeholder={student ? "0 (yangi to'lov qo'shish uchun)" : "0"}
-                    className="bg-secondary border-border"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{student ? "Joriy qarzdorlik" : "Qarzdorlik"}</Label>
-                  <Input
-                    value={formatMoney(debt)}
-                    disabled
-                    className="bg-muted border-border text-destructive font-medium"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Guruh</Label>
-                  <Select
-                    value={form.group_id || ""}
-                    onValueChange={(v) => set("group_id", v)}
-                  >
-                    <SelectTrigger className="bg-secondary border-border">
-                      <SelectValue placeholder="Tanlang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {groupList.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>
-                          {g.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Boshlang'ich to'lov</Label>
-                  <Input
-                    type="number"
-                    value={form.initial_payment || ""}
-                    onChange={(e) => setNum("initial_payment", e.target.value)}
-                    min={0}
-                    disabled={!!student || disabledFields.includes("initial_payment")}
-                    className={`${(!!student || disabledFields.includes("initial_payment")) ? "bg-muted" : "bg-secondary"} border-border`}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{student ? "Joriy qarzdorlik" : "Qarzdorlik"}</Label>
-                  <Input
-                    value={formatMoney(debt)}
-                    disabled
-                    className="bg-muted border-border text-destructive font-medium"
-                  />
-                </div>
-              </div>
-              {student && (
-                <div className="space-y-2">
-                  <Label>Qo'shimcha to'lov</Label>
-                  <Input
-                    type="number"
-                    value={form.amount_paid || ""}
-                    onChange={(e) => setNum("amount_paid", e.target.value)}
-                    min={0}
-                    placeholder="0 (yangi to'lov qo'shish uchun)"
-                    className="bg-secondary border-border"
-                  />
-                </div>
+            <FormField
+              control={form.control}
+              name="has_document"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value || false}
+                      onCheckedChange={(v) => field.onChange(!!v)}
+                      id="doc"
+                    />
+                  </FormControl>
+                  <FormLabel htmlFor="doc" className="!mt-0">
+                    Hujjat mavjud
+                  </FormLabel>
+                </FormItem>
               )}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>
-                    Guruh <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={form.group_id || ""}
-                    onValueChange={(v) => set("group_id", v)}
-                  >
-                    <SelectTrigger className="bg-secondary border-border">
-                      <SelectValue placeholder="Tanlang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {groupList.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>
-                          {g.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Tugatish sanasi</Label>
-                  <Input
-                    type="date"
-                    value={form.completion_date || ""}
-                    onChange={(e) => set("completion_date", e.target.value)}
-                    className="bg-secondary border-border"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Shartnoma raqami</Label>
-                  <Input
-                    value={form.contract_number || ""}
-                    onChange={(e) => set("contract_number", e.target.value)}
-                    placeholder="C-201"
-                    className="bg-secondary border-border"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={form.o83 || false}
-                  onCheckedChange={(v) => set("o83", !!v)}
-                  id="o83"
-                />
-                <Label htmlFor="o83">O83</Label>
-              </div>
-            </>
-          )}
-
-          {operators.length > 0 && (
-            <div className="space-y-2">
-              <Label>Operator</Label>
-              <Select
-                value={form.registered_by || ""}
-                onValueChange={(v) => set("registered_by", v)}
-              >
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Operatorni tanlang (ixtiyoriy)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {operators.map((op) => (
-                    <SelectItem key={op.id} value={op.id}>
-                      {op.name || op.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Natijasi</Label>
-              <Select
-                value={form.result || "oqimoqda"}
-                onValueChange={(v) => set("result", v as ResultStatus)}
-              >
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(resultLabels).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={form.has_document || false}
-              onCheckedChange={(v) => set("has_document", !!v)}
-              id="doc"
             />
-            <Label htmlFor="doc">Hujjat mavjud</Label>
-          </div>
 
-          <div className="space-y-2">
-            <Label>Izoh</Label>
-            <Textarea
-              value={form.notes || ""}
-              onChange={(e) => set("notes", e.target.value)}
-              placeholder="Izoh yozing..."
-              rows={3}
-              className="bg-secondary border-border"
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Izoh</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value || ""}
+                      placeholder="Izoh yozing..."
+                      rows={3}
+                      className="bg-secondary border-border"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Bekor qilish
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saqlanmoqda..." : student ? "Saqlash" : "Qo'shish"}
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Bekor qilish
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading || form.formState.isSubmitting}
+              >
+                {loading || form.formState.isSubmitting
+                  ? "Saqlanmoqda..."
+                  : student
+                    ? "Saqlash"
+                    : "Qo'shish"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
