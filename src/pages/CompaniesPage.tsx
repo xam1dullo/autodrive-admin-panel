@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -84,6 +85,7 @@ const EMPTY_FORM: FormState = {
 };
 
 const CompaniesPage = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<CompanyStatus | "all">("all");
   const [sortField, setSortField] = useState<keyof Company>("created_at");
@@ -287,7 +289,11 @@ const CompaniesPage = () => {
                 : paginatedItems.map((c, idx) => (
                     <tr key={c.id} className="table-row-striped border-b border-border/50">
                       <td className="px-4 py-3 text-center text-muted-foreground">{startIndex + idx + 1}</td>
-                      <td className="px-4 py-3 font-medium">{c.name}</td>
+                      <td className="px-4 py-3 font-medium">
+                        <Link to={`/kompaniyalar/${c.id}`} className="hover:text-primary hover:underline">
+                          {c.name}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{c.slug}</td>
                       <td className="px-4 py-3 text-muted-foreground">
                         <div className="flex flex-col">
@@ -371,6 +377,7 @@ const CompaniesPage = () => {
               key={c.id}
               title={c.name}
               subtitle={c.slug}
+              onClick={() => navigate(`/kompaniyalar/${c.id}`)}
               fields={[
                 {
                   label: "Holat",

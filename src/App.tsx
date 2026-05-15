@@ -22,6 +22,7 @@ const UsersPage = lazy(() => import("./pages/UsersPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const AuditLogPage = lazy(() => import("./pages/AuditLogPage"));
 const CompaniesPage = lazy(() => import("./pages/CompaniesPage"));
+const CompanyDetailPage = lazy(() => import("./pages/CompanyDetailPage"));
 const PlatformUsersPage = lazy(() => import("./pages/PlatformUsersPage"));
 
 const queryClient = new QueryClient({
@@ -83,6 +84,16 @@ const App = () => (
                 <DevRoute>
                   <Suspense fallback={<PageLoader />}>
                     <CompaniesPage />
+                  </Suspense>
+                </DevRoute>
+              }
+            />
+            <Route
+              path="kompaniyalar/:id"
+              element={
+                <DevRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <CompanyDetailPage />
                   </Suspense>
                 </DevRoute>
               }
