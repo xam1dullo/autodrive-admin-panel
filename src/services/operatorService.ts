@@ -1,12 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '@/api/axiosInstance';
+import { useAuthStore } from '@/store/authStore';
 import { User } from '@/types/user';
 
 
 
-export const useOperators = () =>
-  useQuery<User[]>({
-    queryKey: ['operators'],
+export const useOperators = () => {
+  const branchId = useAuthStore((s) => s.user?.branch_id);
+  const role = useAuthStore((s) => s.user?.role);
+  const isCrossTenantRole = role === 'owner' || role === 'dev';
+  return useQuery<User[]>({
+    queryKey: ['operators', branchId],
     queryFn: async () => {
       try {
         const { data: res } = await axiosInstance.get('/users', { params: { role: 'operator' } });
@@ -18,7 +22,9 @@ export const useOperators = () =>
         return [];
       }
     },
+    enabled: !!branchId || isCrossTenantRole,
   });
+};
 
 export const useCreateOperator = () => {
   const qc = useQueryClient();

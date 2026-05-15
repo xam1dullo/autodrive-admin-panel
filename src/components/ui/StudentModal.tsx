@@ -140,7 +140,6 @@ const StudentModal = ({
           status: student.status || "active",
           registered_by: student.registered_by_id || "",
         });
-        console.log("Loaded student into form:", student.group_id);
       } else {
         setForm(defaultForm());
       }

@@ -1,10 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/api/axiosInstance";
+import { useAuthStore } from "@/store/authStore";
 import { Group, GroupOverview, GroupsById } from "@/types/group";
 
-export const useGroups = () =>
-  useQuery<Group[]>({
-    queryKey: ["groups"],
+export const useGroups = () => {
+  const branchId = useAuthStore((s) => s.user?.branch_id);
+  const role = useAuthStore((s) => s.user?.role);
+  const isCrossTenantRole = role === "owner" || role === "dev";
+  return useQuery<Group[]>({
+    queryKey: ["groups", branchId],
     queryFn: async () => {
       try {
         const { data: res } = await axiosInstance.get("/groups");
@@ -16,11 +20,16 @@ export const useGroups = () =>
         return [];
       }
     },
+    enabled: !!branchId || isCrossTenantRole,
   });
+};
 
-export const useGroupsOverview = () =>
-  useQuery<GroupOverview[]>({
-    queryKey: ["groups-overview"],
+export const useGroupsOverview = () => {
+  const branchId = useAuthStore((s) => s.user?.branch_id);
+  const role = useAuthStore((s) => s.user?.role);
+  const isCrossTenantRole = role === "owner" || role === "dev";
+  return useQuery<GroupOverview[]>({
+    queryKey: ["groups-overview", branchId],
     queryFn: async () => {
       try {
         const { data: res } = await axiosInstance.get("/groups/overview");
@@ -32,7 +41,9 @@ export const useGroupsOverview = () =>
         return [];
       }
     },
+    enabled: !!branchId || isCrossTenantRole,
   });
+};
 
 export const useGroupsById = ({ id }: { id: string }) =>
   useQuery<GroupsById>({

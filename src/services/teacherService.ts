@@ -1,13 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '@/api/axiosInstance';
+import { useAuthStore } from '@/store/authStore';
 import { User } from '@/types/user';
 
 export type Specialization = 'THEORY' | 'PRACTICE';
 
 
-export const useTeachers = () =>
-  useQuery<User[]>({
-    queryKey: ['teachers'],
+export const useTeachers = () => {
+  const branchId = useAuthStore((s) => s.user?.branch_id);
+  const role = useAuthStore((s) => s.user?.role);
+  const isCrossTenantRole = role === 'owner' || role === 'dev';
+  return useQuery<User[]>({
+    queryKey: ['teachers', branchId],
     queryFn: async () => {
       try {
         const { data: res } = await axiosInstance.get('/users', { params: { role: 'teacher' } });
@@ -19,7 +23,9 @@ export const useTeachers = () =>
         return [];
       }
     },
+    enabled: !!branchId || isCrossTenantRole,
   });
+};
 
 export const useCreateTeacher = () => {
   const qc = useQueryClient();
