@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { CommandPalette, useCommandPalette } from "./CommandPalette";
 
 export const AppLayout = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const location = useLocation();
+  const palette = useCommandPalette();
 
   // Auto-close the mobile drawer on route change so taps go straight to the page.
   useEffect(() => {
@@ -16,11 +18,15 @@ export const AppLayout = () => {
     <div className="min-h-screen bg-background">
       <Sidebar mobileOpen={mobileSidebarOpen} onMobileOpenChange={setMobileSidebarOpen} />
       <div className="flex min-h-screen flex-col transition-all duration-300 md:ml-60">
-        <Topbar onMobileMenuClick={() => setMobileSidebarOpen(true)} />
+        <Topbar
+          onMobileMenuClick={() => setMobileSidebarOpen(true)}
+          onCommandPaletteOpen={() => palette.setOpen(true)}
+        />
         <main className="flex-1 p-3 sm:p-4 md:p-6">
           <Outlet />
         </main>
       </div>
+      <CommandPalette open={palette.open} onOpenChange={palette.setOpen} />
     </div>
   );
 };
