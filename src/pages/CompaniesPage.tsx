@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronsUpDown,
   Briefcase,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ import {
   useSuspendCompany,
   useUpdateCompany,
 } from "@/services/companyService";
+import * as XLSX from "xlsx";
 
 const formatDate = (d?: string | null) => {
   if (!d) return "—";
@@ -131,6 +133,27 @@ const CompaniesPage = () => {
   const { currentPage, totalPages, paginatedItems, setCurrentPage } = usePagination(sorted);
   const startIndex = (currentPage - 1) * 10;
 
+  const exportToExcel = () => {
+    const statusLabel: Record<CompanyStatus, string> = {
+      active: "Faol",
+      pending: "Kutmoqda",
+      suspended: "To'xtatilgan",
+    };
+    const rows = sorted.map((c, idx) => ({
+      "#": idx + 1,
+      Nomi: c.name,
+      Slug: c.slug,
+      Holati: statusLabel[c.status],
+      Telefon: c.contact_phone ?? "—",
+      Email: c.contact_email ?? "—",
+      "Yaratilgan sana": formatDate(c.created_at),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Kompaniyalar");
+    XLSX.writeFile(wb, `kompaniyalar_${format(new Date(), "dd-MM-yyyy")}.xlsx`);
+  };
+
   const openCreate = () => {
     setEditItem(null);
     setForm(EMPTY_FORM);
@@ -211,9 +234,19 @@ const CompaniesPage = () => {
           <h1 className="font-heading text-2xl font-bold">Kompaniyalar</h1>
           <p className="text-sm text-muted-foreground">{items.length} ta kompaniya</p>
         </div>
-        <Button className="gap-2" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Kompaniya qo'shish
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={exportToExcel}
+            disabled={sorted.length === 0}
+          >
+            <Download className="h-4 w-4" /> Excel
+          </Button>
+          <Button className="gap-2" onClick={openCreate}>
+            <Plus className="h-4 w-4" /> Kompaniya qo'shish
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
