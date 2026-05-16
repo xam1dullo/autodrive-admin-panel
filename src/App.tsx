@@ -24,6 +24,7 @@ const AuditLogPage = lazy(() => import("./pages/AuditLogPage"));
 const CompaniesPage = lazy(() => import("./pages/CompaniesPage"));
 const CompanyDetailPage = lazy(() => import("./pages/CompanyDetailPage"));
 const PlatformUsersPage = lazy(() => import("./pages/PlatformUsersPage"));
+const SystemHealthPage = lazy(() => import("./pages/SystemHealthPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -104,6 +105,16 @@ const App = () => (
                 <DevRoute>
                   <Suspense fallback={<PageLoader />}>
                     <PlatformUsersPage />
+                  </Suspense>
+                </DevRoute>
+              }
+            />
+            <Route
+              path="system-health"
+              element={
+                <DevRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <SystemHealthPage />
                   </Suspense>
                 </DevRoute>
               }

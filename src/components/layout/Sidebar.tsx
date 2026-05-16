@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Briefcase,
   KeyRound,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -42,6 +43,7 @@ const navSections: NavSection[] = [
     items: [
       { path: "/kompaniyalar", label: "Kompaniyalar", icon: Briefcase, devOnly: true },
       { path: "/platform-foydalanuvchilar", label: "Platform Users", icon: KeyRound, devOnly: true },
+      { path: "/system-health", label: "Tizim holati", icon: Activity, devOnly: true },
     ],
   },
   {

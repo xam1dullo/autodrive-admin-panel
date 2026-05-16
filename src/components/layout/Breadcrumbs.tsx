@@ -11,6 +11,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
   kompaniyalar: "Kompaniyalar",
   "platform-foydalanuvchilar": "Platform Users",
+  "system-health": "Tizim holati",
   filiallar: "Filiallar",
   guruhlar: "Guruhlar",
   talabalar: "Talabalar",
