@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { CommandPalette, useCommandPalette } from "./CommandPalette";
 
 export const AppLayout = () => {
@@ -23,7 +24,14 @@ export const AppLayout = () => {
           onCommandPaletteOpen={() => palette.setOpen(true)}
         />
         <main className="flex-1 p-3 sm:p-4 md:p-6">
-          <Outlet />
+          <Breadcrumbs />
+          {/* key forces a remount on route change so the fade-in plays */}
+          <div
+            key={location.pathname}
+            className="animate-in fade-in duration-200"
+          >
+            <Outlet />
+          </div>
         </main>
       </div>
       <CommandPalette open={palette.open} onOpenChange={palette.setOpen} />
