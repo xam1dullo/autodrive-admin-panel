@@ -24,6 +24,7 @@ import {
   useSuspendCompany,
 } from "@/services/companyService";
 import { usePlatformUsers } from "@/services/platformUserService";
+import { useBranches } from "@/services/branchService";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +88,9 @@ const CompanyDetailPage = () => {
   const { data: users, isLoading: usersLoading } = usePlatformUsers({
     companyId: id,
     limit: 100,
+  });
+  const { data: branches, isLoading: branchesLoading } = useBranches({
+    companyId: id,
   });
   const approve = useApproveCompany();
   const suspend = useSuspendCompany();
@@ -189,6 +193,7 @@ const CompanyDetailPage = () => {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Umumiy</TabsTrigger>
+          <TabsTrigger value="branches">Filiallar</TabsTrigger>
           <TabsTrigger value="users">Foydalanuvchilar</TabsTrigger>
           <TabsTrigger value="audit">Audit</TabsTrigger>
         </TabsList>
@@ -243,6 +248,42 @@ const CompanyDetailPage = () => {
               avtomatik shu kompaniyaga o'tadi va barcha sahifalarda data filtrlanadi.
             </p>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="branches" className="space-y-3">
+          {branchesLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : !branches || branches.length === 0 ? (
+            <EmptyState
+              icon={Building2}
+              title="Filiallar yo'q"
+              description="Bu kompaniyaga hali filial qo'shilmagan."
+            />
+          ) : (
+            <div className="grid gap-3">
+              {branches.map((b) => (
+                <DataCard
+                  key={b.id}
+                  title={b.name}
+                  subtitle={b.location}
+                  fields={[
+                    { label: "Menejer", value: b.manager_name ?? "—" },
+                    { label: "Faol talabalar", value: b.active_students ?? 0 },
+                    {
+                      label: "Yaratilgan",
+                      value: b.created_at
+                        ? format(new Date(b.created_at), "dd-MMM-yyyy")
+                        : "—",
+                    },
+                  ]}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="users" className="space-y-3">

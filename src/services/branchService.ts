@@ -9,12 +9,14 @@ const demoBranches: Branch[] = [
   { id: 'samarqand', name: 'Samarqand', location: 'Samarqand shahri', manager_name: 'Bekzod Tursunov', active_students: 28, created_at: '2024-01-01' },
 ];
 
-export const useBranches = () =>
+export const useBranches = (params: { companyId?: string } = {}) =>
   useQuery<Branch[]>({
-    queryKey: ['branches'],
+    queryKey: ['branches', params],
     queryFn: async () => {
       try {
-        const { data: res } = await axiosInstance.get('/branches');
+        const { data: res } = await axiosInstance.get('/branches', {
+          params: params.companyId ? { company_id: params.companyId } : undefined,
+        });
         const arr = res?.data?.data || res?.data;
         if (Array.isArray(arr)) return arr;
         if (Array.isArray(res)) return res;

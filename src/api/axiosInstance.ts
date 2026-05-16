@@ -23,7 +23,10 @@ axiosInstance.interceptors.request.use((config) => {
   const url = (config.url ?? '').replace(API_BASE_URL, '');
   const isPlatformRoute = PLATFORM_PREFIX.test(url);
   if (user?.role === 'dev' && activeCompanyId && !isPlatformRoute) {
-    config.params = { ...(config.params ?? {}), company_id: activeCompanyId };
+    // Default to the dev's "view-as" company, but let an explicit
+    // call-site company_id win (e.g. CompanyDetailPage fetching
+    // /branches?company_id=<that company>).
+    config.params = { company_id: activeCompanyId, ...(config.params ?? {}) };
   }
   return config;
 });
